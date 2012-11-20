@@ -1,3 +1,4 @@
+package database;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -5,7 +6,7 @@ import java.util.HashMap;
 public class CourseTable
 	extends Table<String>
 {
-	public CourseTable()
+	protected CourseTable()
 	{
 		this.uniqueIds = new ArrayList<String>();
 		this.fields = new ArrayList<String>();
@@ -19,7 +20,7 @@ public class CourseTable
 	}
 	
 	// Throw error if course (uniqueId) already exists
-	public void insert(String uniqueId, String name, String instructor)
+	protected void insert(String uniqueId, String name, String instructor)
 	{
 		
 	}

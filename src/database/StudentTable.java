@@ -1,3 +1,4 @@
+package database;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -7,7 +8,7 @@ public class StudentTable
 {
 	//uniqueId is the student ID
 	
-	public StudentTable()
+	protected StudentTable()
 	{
 		this.uniqueIds = new ArrayList<Integer>();
 		this.fields = new ArrayList<String>();
@@ -25,7 +26,7 @@ public class StudentTable
 	}
 	
 	// Throw error if student (uniqueId) already exists
-	public void insert(Integer uniqueId, String first, String last, Integer age, Integer year)
+	protected void insert(Integer uniqueId, String first, String last, Integer age, Integer year)
 	{
 		
 	}
