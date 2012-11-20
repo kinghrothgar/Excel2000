@@ -46,12 +46,15 @@ public class Database
 		
 	}
 	
-	public 
+	// Throw error if types aren't right or things are missing
+	public <T,E> void update(String table, T uniqueId, String field, E value)
+	{
+		
+	}
 	
-	
-	
-	// Throws error if uniqueId doesn't exist
-	public void deleteGrade(String uniqueId)
+	// Throw error if deleting from students or courses if student or course exist in
+	// in the respective columns in grades
+	public <T> void delete(String table, T uniqueId)
 	{
 		
 	}
@@ -60,6 +63,11 @@ public class Database
 	public void deleteGrade(Integer student, String course)
 	{
 		
+	}
+	
+	public ArrayList<?> getField(String table, String field)
+	{
+		return ArrayList<?>;
 	}
 
 }
