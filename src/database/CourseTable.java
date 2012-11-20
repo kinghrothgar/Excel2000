@@ -20,7 +20,7 @@ public class CourseTable
 	}
 	
 	// Throw error if course (uniqueId) already exists
-	protected void insert(String uniqueId, String name, String instructor)
+	protected void insert(String table, ArrayList<String> fields, ArrayList<String> values)
 	{
 		
 	}
