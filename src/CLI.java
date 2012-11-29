@@ -26,22 +26,40 @@ public class CLI {
             }
         }
     }
-
-    public String select(String table, Map<String,String> map) {
-        // selects from table where String key is String value in the map, if the strings are not empty
-    }
-
-    public String insert(String table, Map<String,String> map) {
-        // inserts into table the key in the map, and if the value is not empty, into the columns specified by the value
-    }
-
-    public String update(String table, Map<String,String> map) {
-        // alters table by adding all keys in the map, if value is not set, at the end, value can specify location of new column
-    }
-
-    public String delete(String table, Map<String,String> map) {
-        // deletes from table where String key is String value in the map, if the strings are not empty
-    }
+    
+	public static String select(String command)
+	{
+		return "Output";
+	}
+	public static String update(String command)
+	{
+		return "Output";
+	}
+	public static String delete(String command)
+	{
+		return "Output";
+	}
+	public static String insert(String command)
+	{
+		return "Output";
+	}
+	
+	public static String avg(String command)
+	{
+		
+	}
+	public static String max(String command){
+		
+	}
+	public static String min(String command){
+		
+	}
+	public static String sum(String command){
+		
+	}
+	public static String count(String command){
+		
+	}
 
     public String help() {
         // queries current user information and prints permissions
