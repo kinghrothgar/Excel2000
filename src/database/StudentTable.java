@@ -49,9 +49,13 @@ public class StudentTable
 		else
 			this.insert(student, null, null, null, null);
 	}
+	
 	protected void insert(Integer student, String first, String last, Integer age, Integer year)
 	{
 		if(this.uniqueIdExists(student))
+			// TODO: Throw error
+			;
+		else if(student == null)
 			// TODO: Throw error
 			;
 		else
@@ -62,6 +66,25 @@ public class StudentTable
 			this.records.get("age").add(age);
 			this.records.get("year").add(year);
 		}
+	}
+	
+	@Override
+	protected void insert(ArrayList<Object> values) 
+	{
+		// ERROR Checks:
+		if(values.size() > this.fields.size())
+			// TODO: Throw error
+			;
+		else
+			while(values.size() < this.fields.size())
+				values.add(null);
+			// TODO: Catch error if wrong type
+			Integer student = (Integer) values.get(0);
+			String first = (String) values.get(1);
+			String last = (String) values.get(2);
+			Integer age = (Integer) values.get(3);
+			Integer year = (Integer) values.get(4);
+			this.insert(student, first, last, age, year);
 	}
 
 	@Override
@@ -122,5 +145,4 @@ public class StudentTable
 //		test.update("first", "Cool");
 //		System.out.println(test.records.get("first").toString());
 //	}
-
 }

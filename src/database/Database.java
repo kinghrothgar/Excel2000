@@ -35,30 +35,40 @@ public class Database
 	
 	// Checks to make sure required fields (for the unique ids) are present and
 	// fills in missing ones with blanks
-	public void insert(String table, ArrayList<String> fields, ArrayList<String> values)
+	public void insert(String table, ArrayList<String> fields, ArrayList<Object> values)
 	{
-
+		if(table == "courses")
+			this.courses.insert(fields, values);
+		else if(table == "student")
+			this.students.insert(fields, values);
+		else if(table == "grades")
+			// TODO: Extra checks for grades table
+			this.grades.insert(fields, values);
+		else
+			// TODO: Raise error, not valid table
+			;
 	}
 	
 	// Adds values in "standard" order must at least have required unique entries for table
 	public void insert(String table, ArrayList<Object> values)
 	{
-		if(table == "student")
+		if(table == "courses")
+			this.courses.insert(values);
+		else if(table == "student")
+			this.students.insert(values);
+		else if(table == "grades")
 		{
-			if(values.size() > 5)
-				// TODO: Throw error
+			if(!(this.students.records.get("student").contains(values.get(0))))
+				// TODO: throw error
 				;
-			else
-				while(values.size() < 5)
-					values.add(null);
-				// TODO: Catch error if wrong type
-				Integer student = (Integer) values.get(0);
-				String first = (String) values.get(1);
-				String last = (String) values.get(2);
-				Integer age = (Integer) values.get(3);
-				Integer year = (Integer) values.get(4);
-				this.students.insert(student, first, last, age, year);
+			else if(!(this.students.records.get("course").contains(values.get(1))))
+				// TODO: throw error
+				;
+			this.grades.insert(values);
 		}
+		else
+			// TODO: Raise error, not valid table
+			;
 	}
 	
 	// Throw error if field doesn't exist, value is the wrong type, table doesn't exist,
@@ -76,15 +86,19 @@ public class Database
 	
 	// Throw error if deleting from students or courses if student or course exist in
 	// in the respective columns in grades
-	public <T> void delete(String table, T uniqueId)
+	public <T extends Object> void delete(String table, T uniqueId)
 	{
-		
-	}
-	
-	// Throws error if uniqueId doesn't exist
-	public void deleteGrade(Integer student, String course)
-	{
-		
+		if(table == "courses")
+			
+			this.courses.delete((String) uniqueId);
+		else if(table == "student")
+			this.students.delete((Integer) uniqueId);
+		else if(table == "grades")
+			// TODO: Extra checks for grades table
+			;
+		else
+			// TODO: Raise error, not valid table
+			;
 	}
 	
 //	public ArrayList<?> getField(String table, String field)
@@ -97,12 +111,17 @@ public class Database
 		ArrayList<Object> values = new ArrayList<Object>();
 			values.add((Integer) 88694986);
 			values.add("Luke");
-			values.add((Integer) 21);
-			values.add((Integer) 21);
 			values.add((Integer) 2013);
-		test.insert("student", values);
-		for(ArrayList<Object> field: test.students.records.values())
-			System.out.println(field.toString());
+		ArrayList<String> fields = new ArrayList<String>();
+			fields.add("student");
+			fields.add("first");
+			fields.add("year");
+		test.insert("students", fields, values);
+		System.out.println("student: " + test.students.getField("student").toString());
+		System.out.println("first: " + test.students.getField("first").toString());
+		System.out.println("last: " + test.students.getField("last").toString());
+		System.out.println("age: " + test.students.getField("age").toString());
+		System.out.println("year: " + test.students.getField("year").toString());
 	}
 
 }

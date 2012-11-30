@@ -29,10 +29,37 @@ public class CourseTable
 			this.records.put("instructor", new ArrayList<Object>());
 	}
 	
-	// Throw error if course (uniqueId) already exists
-	protected void insert(String table, ArrayList<String> fields, ArrayList<String> values)
+	private void insert(String course, String name, String instructor)
 	{
-		
+		if(this.uniqueIdExists(course))
+			// TODO: Throw error
+			;
+		else if(course == null)
+			// TODO: Throw error
+			;
+		else
+		{
+			this.records.get("course").add(course);
+			this.records.get("name").add(name);
+			this.records.get("instructor").add(instructor);
+		}
+	}
+	
+	// Throw error if course (uniqueId) already exists
+	@Override
+	protected void insert(ArrayList<Object> values) 
+	{
+		if(values.size() > this.fields.size())
+			// TODO: Throw error
+			;
+		else
+			while(values.size() < this.fields.size())
+				values.add(null);
+			// TODO: Catch error if wrong type
+			String course = (String) values.get(0);
+			String name = (String) values.get(1);
+			String instructor = (String) values.get(2);
+			this.insert(course, name, instructor);
 	}
 
 	@Override

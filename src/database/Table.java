@@ -13,6 +13,37 @@ public abstract class Table<E>
 	// Throw error if uniqueId already exists, add new record with "blank" entries
 	protected abstract void insert(E uniqueId);
 	
+	protected abstract void insert(ArrayList<Object> values);
+	
+	protected void insert(ArrayList<String> fields, ArrayList<Object> values)
+	{
+		ArrayList<Object> sortedValues = new ArrayList<Object>(this.fields.size());
+		// ERROR Checks:
+		if(fields.size() != values.size())
+			// TODO: Throw error
+			;
+		else if(fields.size() > this.fields.size())
+			// TODO: Throw error
+			;
+		for(String field: fields)
+		{
+			if(!(this.fields.contains(field)))
+				// TODO: Throw error
+				;
+		}
+		// Insert the data
+		// Add missing fields
+		for(int i=0; i < this.fields.size(); i++)
+		{
+			int index = fields.indexOf(this.fields.get(i));
+			if(index == -1)
+				sortedValues.add(null);
+			else
+				sortedValues.add(values.get(index));
+		}
+		this.insert(sortedValues);
+	}
+	
 	// Throw error if value type isn't correct
 	protected abstract <T extends Object> void update(String field, T value);
 	
