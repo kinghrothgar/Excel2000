@@ -1,26 +1,37 @@
 package database;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 
 public class GradeTable
 	extends Table<String>
 {
 	// Unique ID is a combination of the student id and the course code with a "+" in between
+	protected static Map<String, Object> FIELD_TYPES;
+	static {
+		Map<String, Object> fieldTypes = new HashMap<String, Object>();
+		fieldTypes.put("student", (Integer) 0);
+		fieldTypes.put("course", "string");
+		fieldTypes.put("grade", (Double) 0.0);
+		fieldTypes.put("isFinal", true);
+		FIELD_TYPES = Collections.unmodifiableMap(fieldTypes);
+	}
 	
 	protected GradeTable()
 	{
-		this.uniqueIds = new ArrayList<String>();
+		//this.uniqueIds = new ArrayList<String>();
 		this.fields = new ArrayList<String>();
 			this.fields.add("student");
 			this.fields.add("course");
 			this.fields.add("grade");
 			this.fields.add("isFinal");
-		this.records = new HashMap<String, ArrayList<?>>();
-			this.records.put("student", new ArrayList<Integer>());
-			this.records.put("course", new ArrayList<String>());
-			this.records.put("grade", new ArrayList<Double>());
-			this.records.put("isFinal", new ArrayList<Boolean>());
+		this.records = new HashMap<String, ArrayList<Object>>();
+			this.records.put("student", new ArrayList<Object>());
+			this.records.put("course", new ArrayList<Object>());
+			this.records.put("grade", new ArrayList<Object>());
+			this.records.put("isFinal", new ArrayList<Object>());
 	}
 	
 	//TODO: simply block this method with an error or get the student id and the course code from the uniqueId
@@ -40,5 +51,17 @@ public class GradeTable
 	protected <T> void update(Integer student, String course, String field, T value)
 	{
 		//Make sure uniqueId exists and the value type is correct
+	}
+
+	@Override
+	protected <T> void update(String field, T value) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected <T> void update(String uniqueId, String field, T value) {
+		// TODO Auto-generated method stub
+		
 	}
 }
