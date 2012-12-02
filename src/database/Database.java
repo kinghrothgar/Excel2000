@@ -35,7 +35,7 @@ public class Database
 	
 	// Checks to make sure required fields (for the unique ids) are present and
 	// fills in missing ones with blanks
-	public void insert(String table, ArrayList<String> fields, ArrayList<Object> values)
+	public void insert(String table, ArrayList<String> fields, ArrayList<String> values)
 	{
 		// Using courses because all tables have same orderValues method
 		values = this.courses.orderValues(fields, values);
@@ -59,7 +59,7 @@ public class Database
 	}
 	
 	// Adds values in "standard" order must at least have required unique entries for table
-	public void insert(String table, ArrayList<Object> values)
+	public void insert(String table, ArrayList<String> values)
 	{
 		if(table == "courses")
 			this.courses.insert(values);

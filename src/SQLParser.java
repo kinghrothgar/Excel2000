@@ -1,3 +1,4 @@
+import java.util.Arrays;
 import java.util.Scanner;
 import database.Database;
 import java.util.ArrayList;
