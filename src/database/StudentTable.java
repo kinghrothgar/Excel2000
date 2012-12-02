@@ -94,14 +94,14 @@ public class StudentTable
 	
 	
 	@Override
-	protected void update(Integer student, String field, String value)
+	protected void update(String student, String field, String value)
 	{
 		int index;
 		Object castedValue;
 		// ERROR Checks:
 		castedValue = this.castValue(field, value);
 		if(!(this.uniqueIdExists(student)))
-			throw new IllegalArgumentException("Error: " + student + "does not exists in table");
+			throw new IllegalArgumentException("Error: " + student + " does not exists in table");
 		else if(field.equals("student"))
 			throw new IllegalArgumentException("Error: student ID cannot be changed.");
 		else
@@ -168,77 +168,22 @@ public class StudentTable
 	// Checks number of values, that required fields are not null, that they are the
 	// right type, and casts them. Must have the correct number of values.
 	@Override
-	protected ArrayList<Object> checkAndCastValues(ArrayList<Object> values) 
+	protected ArrayList<Object> checkAndCastValues(ArrayList<String> values) 
 	{
 		ArrayList<Object> correct = new ArrayList<Object>(this.fields.size());
-		Integer student;
-		String first;
-		String last;
-		Integer age;
-		Integer year;
 		
 		// Check if correct size
 		if(values.size() != this.fields.size())
 			throw new IllegalArgumentException("Error: there must be " + this.fields.size() + "values");
 		
 		// Check and cast
-		if(values.get(0) == null)
-			throw new IllegalArgumentException("Error: student ID must not be null");
-		else {
-			try {student = new Integer((String) values.get(0));}
-			catch (Exception e) {throw new IllegalArgumentException("Error: student ID must be an Integer");}
-		}
-		
-		if(values.get(1) == null)
-			first = null;
-		else {
-			if(!(this.isValidName((String) values.get(1))))
-				throw new IllegalArgumentException("Error: first name may only contain A-Z, a-z, ' ', -, and '");
-			try {first = (String) values.get(1);}
-			catch (Exception e) {throw new IllegalArgumentException("Error: first name must be a string");}
-		}
-		
-		if(values.get(2) == null)
-			last = null;
-		else {
-			if(!(this.isValidName((String) values.get(1))))
-				throw new IllegalArgumentException("Error: last name may only contain A-Z, a-z, ' ', -, and '");
-			try {last = (String) values.get(2);}
-			catch (Exception e) {throw new IllegalArgumentException("Error: last name must be a string");}
-		}
-		
-		if(values.get(3) == null)
-			age = null;
-		else {
-			try {age = new Integer((String) values.get(3));}
-			catch (Exception e) {throw new IllegalArgumentException("Error: age must be an Integer");}
-		}
-		
-		if(values.get(4) == null)
-			year = null;
-		else {
-			try {year = new Integer((String) values.get(4));}
-			catch (Exception e) {throw new IllegalArgumentException("Error: year must be an Integer");}
-		}
-		
-		correct.add(student);
-		correct.add(first);
-		correct.add(last);
-		correct.add(age);
-		correct.add(year);
+		correct.add(this.castValue("student", values.get(0)));
+		correct.add(this.castValue("first", values.get(1)));
+		correct.add(this.castValue("last", values.get(2)));
+		correct.add(this.castValue("age", values.get(3)));
+		correct.add(this.castValue("year", values.get(4)));
 		
 		return correct;
-	}
-	
-	// Return true if uniqueId Exists
-	protected boolean uniqueIdExists(String student)
-	{
-		String uniqueField = this.fields.get(0);
-		Object castedValue = this.castValue(uniqueField, student);
-		if(this.records.get(uniqueField).contains(castedValue))
-			return true;
-		else
-			return false;
 	}
 	
 	// Return true if uniqueId Exists

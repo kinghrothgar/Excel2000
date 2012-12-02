@@ -25,9 +25,6 @@ public abstract class Table
 	
 	protected abstract Object castValue(String field, String value);
 	
-	// Return true if uniqueId Exists
-	protected abstract boolean uniqueIdExists(String uniqueId);
-	
 	// Throw error if field doesn't exist
 	protected ArrayList<Object> getField(String field)
 	{
@@ -41,6 +38,7 @@ public abstract class Table
 
 	protected int getRecordIndex(String uniqueId)
 	{
+		
 		String uniqueField = this.fields.get(0);
 		if(!(this.records.get(uniqueField).contains(uniqueId)))
 			// TODO: Throw error
@@ -104,5 +102,16 @@ public abstract class Table
 	protected boolean isValidName(String name)
 	{
 		return name.matches("[a-zA-z]+([ '-][a-zA-Z]+)*");
+	}
+	
+	// Return true if uniqueId Exists
+	protected boolean uniqueIdExists(String uniqueId)
+	{
+		String uniqueField = this.fields.get(0);
+		Object castedValue = this.castValue(uniqueField, uniqueId);
+		if(this.records.get(uniqueField).contains(castedValue))
+			return true;
+		else
+			return false;
 	}
 }

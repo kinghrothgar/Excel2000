@@ -6,7 +6,7 @@ import java.util.Map;
 
 
 public class CourseTable
-	extends Table<String>
+	extends Table
 {
 	protected static Map<String, Object> FIELD_TYPES;
 	static {
@@ -29,12 +29,6 @@ public class CourseTable
 			this.records.put("instructor", new ArrayList<Object>());
 	}
 	
-	@Override
-	protected void insert(String course)
-	{
-		this.insert(course, null, null);
-	}
-	
 	// Checks if course is unique and not null
 	private void insert(String course, String name, String instructor)
 	{
@@ -52,46 +46,41 @@ public class CourseTable
 	
 	// Throw error if course (uniqueId) already exists
 	@Override
-	protected void insert(ArrayList<Object> values) 
+	protected void insert(ArrayList<String> values) 
 	{
+		ArrayList<Object> castedValues;
 		while(values.size() < this.fields.size())
 			values.add(null);
-		values = this.checkAndCastValues(values);
-		String course = (String) values.get(0);
-		String name = (String) values.get(1);
-		String instructor = (String) values.get(2);
+		castedValues = this.checkAndCastValues(values);
+		String course = (String) castedValues.get(0);
+		String name = (String) castedValues.get(1);
+		String instructor = (String) castedValues.get(2);
 		this.insert(course, name, instructor);
 	}
 
 	// Checks if field exists, is not a unique field, and that it is the right type
 	@Override
-	protected <T extends Object> void update(String field, T value) 
+	protected void update(String field, String value)
 	{
+		Object castedValue;
 		// ERROR Checks:
-		this.checkValue(field, value);
+		castedValue = this.castValue(field, value);
 		if(field.equals("course"))
 			throw new IllegalArgumentException("Error: course number cannot be changed.");
 		else
 		{
-			if(value == null)
-			{
-				for(int i=0; i < this.records.get(field).size(); i++)
-					this.records.get(field).set(i, value);
-			}
-			else
-			{
-				for(int i=0; i < this.records.get(field).size(); i++)
-					this.records.get(field).set(i, (String) value);
-			}
+			for(int i=0; i < this.records.get(field).size(); i++)
+				this.records.get(field).set(i, castedValue);
 		}
 	}
 
 	@Override
-	protected <T extends Object> void update(String course, String field, T value)
+	protected void update(String course, String field, T value)
 	{
 		int index;
+		Object castedValue;
 		// ERROR Checks:
-		this.checkValue(field, value);
+		castedValue = this.castValue(field, value);
 		if(!(this.uniqueIdExists(course)))
 			throw new IllegalArgumentException("Error: " + course + "does not exists in table");
 		else if(field.equals("course"))
@@ -99,16 +88,13 @@ public class CourseTable
 		else
 		{
 			index = this.getRecordIndex(course);
-			if(value == null)
-				this.records.get(field).set(index, value);
-			else
-				this.records.get(field).set(index, (String) value);
+			this.records.get(field).set(index, castedValue);
 		}
 	}
 	
 	// Checks if field exists, is not a unique field, and if it's correct type
 	@Override
-	protected <T extends Object> void checkValue(String field, T value) 
+	protected Object castValue(String field, String value) 
 	{
 		if(!(this.fields.contains(field)))
 			throw new IllegalArgumentException("Error: " + field + " is not a valid field");
@@ -118,17 +104,21 @@ public class CourseTable
 				throw new IllegalArgumentException("Error: course number cannot be null.");
 			else if(value.getClass() != String.class)
 				throw new IllegalArgumentException("Error: course number must be a String");
+			return value;
 		}
 		else if(field.equals("name"))
 		{
 			if(value != null && value.getClass() != String.class)
 				throw new IllegalArgumentException("Error: course name must be a String");
+			return value;
 		}
 		else if(field.equals("instructor"))
 		{
 			if(value != null && !(this.isValidName((String) value)))
 				throw new IllegalArgumentException("Error: instructor's last name may only contain A-Z, a-z, ' ', -, and '");
-		}		
+			return value;
+		}
+		return -1;
 	}
 	
 	// Checks number of values, that required fields are not null, that they are the
