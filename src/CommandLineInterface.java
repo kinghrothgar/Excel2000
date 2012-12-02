@@ -1,8 +1,14 @@
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.io.File;
+
 import database.Database;
 
 /**
@@ -13,6 +19,18 @@ public class CommandLineInterface
 {
 	private PrintStream out;
 	private InputStream in;
+	
+	/**
+	 * Starts the SQL Query Command-line interface.
+	 * User can choose options using numeric input.
+	 * Data can be manipulated through alphanumeric input.
+	 */
+	public static void main(String[] args)
+	{
+		CommandLineInterface cli = new CommandLineInterface(System.out, System.in);
+		cli.start();
+	}
+	
 	private Scanner input;
 	private User user;
 	private Database DB;
@@ -108,13 +126,6 @@ public class CommandLineInterface
 		}
 	}
 	
-	private void loadFile()
-	{
-		filepath = prompt("Load from file path:");
-		load(new File(filepath));
-		mainMenu(true);
-	}
-	
 	private void saveFile(boolean backToMain)
 	{
 		out.println("Saving to " + filepath);
@@ -191,7 +202,12 @@ public class CommandLineInterface
 			optionsArray[i] = options.get(i).toString();
 		if (listHelp) printOptions(optionsArray);
 		int choice = getChoice(options.size());
-		if (choice == basicInfoIdx) {
+		if (choice < 1)
+		{
+			out.println("Invalid selection.");
+			makeSelection(false);
+		}
+		else if (choice == basicInfoIdx) {
 			out.println("[GET BASIC INFO]");// TODO: Get basic info
 			makeSelection(false);
 		}
@@ -224,7 +240,10 @@ public class CommandLineInterface
 		else if (choice == logoutIdx)
 			loginToRole(true);// Logout
 		else
-			throw new ArrayIndexOutOfBoundsException();
+		{
+			out.println("Invalid selection.");
+			makeSelection(false);
+		}
 	}
 	
 	/*
@@ -234,41 +253,53 @@ public class CommandLineInterface
 	private void directDataEntry()
 	{
 		DB = new Database();
-		out.println("direct data entry");	// TODO
+		String query;
+		do
+		{
+			query = prompt("Input SQL");
+			// TODO: pass query to parser
+		} while (!query.equals(""));
+		out.println("Manual sql");// TODO: delete this line
+		out.println("direct data entry");	// TODO: delete this line
 		mainMenu(true);
 	}
 	
-	private void select(String command)
+	private void getBasicInfo()
 	{
-		out.println("select");	// TODO
-	}
-	private void update(String command)
-	{
-		out.println("update");	// TODO
-	}
-	private void delete(String command)
-	{
-		out.println("delete");	// TODO
-	}
-	private void insert(String command)
-	{
-		out.println("insert");		// TODO
+		
 	}
 	
-	private void avg(String command)
+	private void select(String command)	// TODO
 	{
-		out.println("avg");		// TODO
+		out.println("select");
 	}
-	private void max(String command){
+	private void update(String command) // TODO
+	{
+		out.println("update");
+	}
+	private void delete(String command)	// TODO
+	{
+		out.println("delete");
+	}
+	private void insert(String command)	// TODO
+	{
+		out.println("insert");
+	}
+	
+	private void avg(String command)	// TODO
+	{
+		out.println("avg");
+	}
+	private void max(String command){	// TODO
 		out.println("max");
 	}
-	private void min(String command){
+	private void min(String command){	// TODO
 		out.println("min");
 	}
-	private void sum(String command){
+	private void sum(String command){	// TODO
 		out.println("sum");
 	}
-	private void count(String command){
+	private void count(String command){	// TODO
 		out.println("count");
 	}
 
@@ -276,15 +307,48 @@ public class CommandLineInterface
         makeSelection(true);// queries current user information and prints permissions
     }
 
-    private void load(File file) {
-        // instantiates DB from a file
-        DB = new Database(file);
+    private void loadFile() {
+        // TODO: instantiates DB from a file
+    	String inFilepath = prompt("Load from file:");
+    	if (!inFilepath.endsWith(".xml"))
+    		inFilepath += ".xml";
+    	try
+    	{
+    		BufferedReader loadIn = new BufferedReader(new FileReader(inFilepath));
+    		// TODO: read table
+    		loadIn.close();
+    	}
+    	catch (IOException e)
+    	{
+    		out.println("Error: Invalid filepath");
+    	}
+    	finally
+    	{
+    		mainMenu(true);
+    	}
+        //DB = new Database(file);
         out.println("loaded file");
     }
 
     private void save() {
-        // saves the database to a file
-    	out.println("saved file");
+    	String outFilepath = prompt("Save to file:");
+    	if (!outFilepath.endsWith(".xml"))
+    		outFilepath += ".xml";
+		try
+		{
+			PrintWriter saveOut = new PrintWriter(new FileWriter(outFilepath));
+			// TODO: write table
+	    	out.println("saved file");
+	    	saveOut.close();
+		}
+		catch (IOException e)
+		{
+			out.println("Error: Invalid filepath");
+		}
+		finally
+		{
+			mainMenu(true);
+		}
     }
 	
 	/*
@@ -395,6 +459,7 @@ public class CommandLineInterface
 		{
 			super(true, true, false, false, false, true, false, true, true);
 			name = "Instructor";
+			
 		}
 	}
 	
