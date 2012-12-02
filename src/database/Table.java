@@ -2,7 +2,7 @@ package database;
 import java.util.ArrayList;
 import java.util.Map;
 
-public abstract class Table<E>
+public abstract class Table
 {
 	//Unique Id is always first field
 	protected ArrayList<String> fields;
@@ -11,13 +11,48 @@ public abstract class Table<E>
 
 	
 	// Throw error if uniqueId already exists, add new record with "blank" entries
-	protected abstract void insert(E uniqueId);
+	//protected abstract void insert(String uniqueId);
 	
-	protected abstract void insert(ArrayList<Object> values);
+	protected abstract void insert(ArrayList<String> values);
 	
-	protected void insert(ArrayList<String> fields, ArrayList<Object> values)
+	// Throw error if value type isn't correct
+	protected abstract void update(String field, String value);
+	
+	// Throw error if uniqueId doesn't exist or value type is incorrect
+	protected abstract void update(String uniqueId, String field, String value);
+	
+	protected abstract ArrayList<Object> checkAndCastValues(ArrayList<String> values);
+	
+	protected abstract Object castValue(String field, String value);
+	
+	// Return true if uniqueId Exists
+	protected abstract boolean uniqueIdExists(String uniqueId);
+	
+	// Throw error if field doesn't exist
+	protected ArrayList<Object> getField(String field)
 	{
-		ArrayList<Object> sortedValues = new ArrayList<Object>(this.fields.size());
+		return this.records.get(field);
+	}
+	
+	protected ArrayList<String> getFieldList()
+	{
+		return this.fields;
+	}
+
+	protected int getRecordIndex(String uniqueId)
+	{
+		String uniqueField = this.fields.get(0);
+		if(!(this.records.get(uniqueField).contains(uniqueId)))
+			// TODO: Throw error
+			;
+		else
+			return this.records.get(uniqueField).indexOf(uniqueId);
+		return -1;
+	}
+	
+	protected ArrayList<String> orderValues(ArrayList<String> fields, ArrayList<String> values)
+	{
+		ArrayList<String> sortedValues = new ArrayList<String>(this.fields.size());
 		// ERROR Checks:
 		if(fields.size() != values.size())
 			// TODO: Throw error
@@ -41,45 +76,9 @@ public abstract class Table<E>
 			else
 				sortedValues.add(values.get(index));
 		}
-		this.insert(sortedValues);
+		return sortedValues;
 	}
 	
-	// Throw error if value type isn't correct
-	protected abstract <T extends Object> void update(String field, T value);
-	
-	// Throw error if uniqueId doesn't exist or value type is incorrect
-	protected abstract <T extends Object> void update(E uniqueId, String field, T value);
-
-	
-	// Throw error if field doesn't exist
-	protected ArrayList<?> getField(String field)
-	{
-		return this.records.get(field);
-	}
-	
-	protected ArrayList<String> getFieldList()
-	{
-		return this.fields;
-	}
-	// Return true if uniqueId Exists
-	protected boolean uniqueIdExists(E uniqueId)
-	{
-		String uniqueField = this.fields.get(0);
-		if(this.records.get(uniqueField).contains(uniqueId))
-			return true;
-		else
-			return false;
-	}
-	protected int getRecordIndex(E uniqueId)
-	{
-		String uniqueField = this.fields.get(0);
-		if(!(this.records.get(uniqueField).contains(uniqueId)))
-			// TODO: Throw error
-			;
-		else
-			return this.records.get(uniqueField).indexOf(uniqueId);
-		return -1;
-	}
 	// Deletes all the table's records
 	protected void delete()
 	{
@@ -88,7 +87,7 @@ public abstract class Table<E>
 	}
 
 	// Throw error if uniqueId doesn't exist
-	protected void delete(E uniqueId)
+	protected void delete(String uniqueId)
 	{
 		int recordIndex;
 		if(!(this.uniqueIdExists(uniqueId)))
@@ -100,5 +99,10 @@ public abstract class Table<E>
 			for(ArrayList<Object> field: this.records.values())
 				field.remove(recordIndex);
 		}
+	}
+	
+	protected boolean isValidName(String name)
+	{
+		return name.matches("[a-zA-z]+([ '-][a-zA-Z]+)*");
 	}
 }

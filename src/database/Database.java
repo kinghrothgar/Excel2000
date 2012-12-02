@@ -37,16 +37,25 @@ public class Database
 	// fills in missing ones with blanks
 	public void insert(String table, ArrayList<String> fields, ArrayList<Object> values)
 	{
+		// Using courses because all tables have same orderValues method
+		values = this.courses.orderValues(fields, values);
 		if(table == "courses")
-			this.courses.insert(fields, values);
-		else if(table == "student")
-			this.students.insert(fields, values);
+			this.courses.insert(values);
+		else if(table == "students")
+			this.students.insert(values);
 		else if(table == "grades")
-			// TODO: Extra checks for grades table
-			this.grades.insert(fields, values);
+		{
+			
+			// TODO: Verify this castings stuff
+			if(!(this.students.uniqueIdExists(new Integer((String) values.get(0)))))
+				throw new IllegalArgumentException("Error: student ID must exist in students table");
+			if(!(this.courses.uniqueIdExists((String) values.get(0))))
+				throw new IllegalArgumentException("Error: courses number must exist in courses table");
+			this.grades.insert(values);
+		}
 		else
 			// TODO: Raise error, not valid table
-			;
+			throw new IllegalArgumentException("Error: Invalid table, must be courses, students, or grades.");
 	}
 	
 	// Adds values in "standard" order must at least have required unique entries for table
@@ -54,7 +63,7 @@ public class Database
 	{
 		if(table == "courses")
 			this.courses.insert(values);
-		else if(table == "student")
+		else if(table == "students")
 			this.students.insert(values);
 		else if(table == "grades")
 		{
@@ -67,8 +76,7 @@ public class Database
 			this.grades.insert(values);
 		}
 		else
-			// TODO: Raise error, not valid table
-			;
+			throw new IllegalArgumentException("Error: Invalid table, must be courses, students, or grades.");
 	}
 	
 	// Throw error if field doesn't exist, value is the wrong type, table doesn't exist,
@@ -91,14 +99,14 @@ public class Database
 		if(table == "courses")
 			
 			this.courses.delete((String) uniqueId);
-		else if(table == "student")
+		else if(table == "students")
 			this.students.delete((Integer) uniqueId);
 		else if(table == "grades")
 			// TODO: Extra checks for grades table
 			;
 		else
 			// TODO: Raise error, not valid table
-			;
+			throw new IllegalArgumentException("Error: Invalid table, must be courses, students, or grades.");
 	}
 	
 //	public ArrayList<?> getField(String table, String field)
