@@ -17,7 +17,7 @@ public class SQLParser
         Database testDB = new Database();
         SQLParser Parser = new SQLParser(testDB);
         String test = Parser.query("INSERT INTO courses VALUES (COP3504, Advanced Programming Fundamentals, Horton)");
-        String test2 = Parser.query("INSERT INTO courses (course, name, instructor) VALUES (COP3504, Advanced Programming Fundamentals, Horton)");
+        String test2 = Parser.query("INSERT INTO courses (course, name, instructor) VALUES (COP3505, Advanced Programming Fundamentals2, Hortona)");
     }
 
     public String query(String query) {
@@ -95,33 +95,13 @@ public class SQLParser
                     while(!(in.contains(")"))) {
                         ++wordNumber;
                         in = parser.next();
-                        if (tableName.equalsIgnoreCase("courses")) {
-                            for (String field : coursesFieldList) {
-                                if(!(in.toLowerCase().contains(field))) {
-                                    throw new IllegalArgumentException("Must give a valid column name");
-                                }
-                            }
-                        }
-                        if (tableName.equalsIgnoreCase("students")) {
-                            for (String field : studentsFieldList) {
-                                if(!(in.toLowerCase().contains(field))) {
-                                    throw new IllegalArgumentException("Must give a valid column name");
-                                }
-                            }
-                        }
-                        if (tableName.equalsIgnoreCase("grades")) {
-                            for (String field : gradesFieldList) {
-                                if(!(in.toLowerCase().contains(field))) {
-                                    throw new IllegalArgumentException("Must give a valid column name");
-                                }
-                            }
-                        }
                         columns += in;
                     }
                     Scanner subScanner = new Scanner(columns.substring(1, columns.length() - 1)).useDelimiter(", *");
                     while(subScanner.hasNext()) {
                         columnList.add(subScanner.next());
                     }
+                    System.out.println(columnList.toString());
                     in = parser.next();
                     String values = "";
                     while(!(in.contains(")"))) {
