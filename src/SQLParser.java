@@ -99,7 +99,6 @@ public class SQLParser
                             for (String field : coursesFieldList) {
                                 if(!(in.toLowerCase().contains(field))) {
                                     throw new IllegalArgumentException("Must give a valid column name");
-                                    break;
                                 }
                             }
                         }
@@ -107,7 +106,6 @@ public class SQLParser
                             for (String field : studentsFieldList) {
                                 if(!(in.toLowerCase().contains(field))) {
                                     throw new IllegalArgumentException("Must give a valid column name");
-                                    break;
                                 }
                             }
                         }
@@ -115,7 +113,6 @@ public class SQLParser
                             for (String field : gradesFieldList) {
                                 if(!(in.toLowerCase().contains(field))) {
                                     throw new IllegalArgumentException("Must give a valid column name");
-                                    break;
                                 }
                             }
                         }
