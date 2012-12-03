@@ -99,7 +99,6 @@ public class SQLParser
                             for (String field : coursesFieldList) {
                                 if(!(in.toLowerCase().contains(field))) {
                                     throw new IllegalArgumentException("Must give a valid column name");
-                                    break;
                                 }
                             }
                         }
@@ -107,7 +106,6 @@ public class SQLParser
                             for (String field : studentsFieldList) {
                                 if(!(in.toLowerCase().contains(field))) {
                                     throw new IllegalArgumentException("Must give a valid column name");
-                                    break;
                                 }
                             }
                         }
@@ -115,7 +113,6 @@ public class SQLParser
                             for (String field : gradesFieldList) {
                                 if(!(in.toLowerCase().contains(field))) {
                                     throw new IllegalArgumentException("Must give a valid column name");
-                                    break;
                                 }
                             }
                         }
@@ -172,10 +169,30 @@ public class SQLParser
                 }
                 System.out.print(outputFormatter(returnArr));
             }
+            if(queryType == 2 && wordNumber == 3)
+            {
+                 if(in.equalsIgnoreCase("courses") || in.equalsIgnoreCase("students") || in.equalsIgnoreCase("grades")) {
+                    tableName = in;
+                }
+                else {
+                    throw new IllegalArgumentException("Invalid Table Name");
+                }
+            }
+            if(queryType == 2 && wordNumber == 4)
+            {
+                if(in.equalsIgnoreCase("WHERE"))
+                {
+                    // Handle where clause
+                }
+                else
+                {
+                    DB.delete(tableName); // Delete all records in table
+                }
+            }
 
         }
-        return ret;
         parser.close();
+        return ret;
     }
 
     public String outputFormatter(ArrayList<ArrayList<Object>> inArr) {
