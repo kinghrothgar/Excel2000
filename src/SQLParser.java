@@ -35,6 +35,10 @@ public class SQLParser
         ArrayList<String> valueList = new ArrayList<String>();
         // ArrayList of Strings to hold the list of columns provided in the query
         ArrayList<String> columnList = new ArrayList<String>();
+        // ArrayList of Strings that holds the list of all fields for the courses table, then students, then grades
+        ArrayList<String> coursesFieldList = DB.getFieldList("courses");
+        ArrayList<String> studentsFieldList = DB.getFieldList("students");
+        ArrayList<String> gradesFieldList = DB.getFieldList("grades");
         Scanner parser = new Scanner(query);
         String ret = "";
         String in = "";
@@ -91,6 +95,30 @@ public class SQLParser
                     while(!(in.contains(")"))) {
                         ++wordNumber;
                         in = parser.next();
+                        if (tableName.equalsIgnoreCase("courses")) {
+                            for (String field : coursesFieldList) {
+                                if(!(in.toLowerCase().contains(field))) {
+                                    throw new IllegalArgumentException("Must give a valid column name");
+                                    break;
+                                }
+                            }
+                        }
+                        if (tableName.equalsIgnoreCase("students")) {
+                            for (String field : studentsFieldList) {
+                                if(!(in.toLowerCase().contains(field))) {
+                                    throw new IllegalArgumentException("Must give a valid column name");
+                                    break;
+                                }
+                            }
+                        }
+                        if (tableName.equalsIgnoreCase("grades")) {
+                            for (String field : gradesFieldList) {
+                                if(!(in.toLowerCase().contains(field))) {
+                                    throw new IllegalArgumentException("Must give a valid column name");
+                                    break;
+                                }
+                            }
+                        }
                         columns += in;
                     }
                     Scanner subScanner = new Scanner(columns.substring(1, columns.length() - 1)).useDelimiter(", *");
@@ -104,35 +132,53 @@ public class SQLParser
                         in = parser.next();
                         values += in;
                     }
-                    subScanner = new Scanner(values.substring(1, values.length() - 1)).useDelimiter(", *");
-                    while(subScanner.hasNext()) {
-                        valueList.add(subScanner.next());
+                    subScanner.close();
+                    Scanner subScanner2 = new Scanner(values.substring(1, values.length() - 1)).useDelimiter(", *");
+                    while(subScanner2.hasNext()) {
+                        valueList.add(subScanner2.next());
                     }
                     DB.insert(tableName, columnList, valueList);
-                    subScanner.close();
+                    subScanner2.close();
                 }
             }
-            if(queryType == 2 && wordNumber == 3)
-            {
-                 if(in.equalsIgnoreCase("courses") || in.equalsIgnoreCase("students") || in.equalsIgnoreCase("grades")) {
-                    tableName = in;
-                }
-                else {
-                    throw new IllegalArgumentException("Invalid Table Name");
-                }
-            }
-            if(queryType == 2 && wordNumber == 4)
-            {
-                if(in.equalsIgnoreCase("WHERE"))
-                {
-                    // Handle where clause
-                }
-                else
-                    ;// Delete all records in table
-            }
-        }
-        parser.close();
-        return ret;
+            if(queryType == 1 && wordNumber == 2) {
+                ArrayList<ArrayList<Object>> returnArr = new ArrayList<ArrayList<Object>>();
+                if(in.equals("*")) {
+                    ++wordNumber;
+                    in = parser.next();
+                    in = parser.next();
+                    if(in.equalsIgnoreCase("courses") || in.equalsIgnoreCase("students") || in.equalsIgnoreCase("grades")) {
+                        tableName = in;
+                    }
+                    else {
+                        throw new IllegalArgumentException("Invalid Table Name");
+                    }
 
+                    if (tableName.equalsIgnoreCase("courses")) {
+                        for (String field : coursesFieldList) {
+                            returnArr.add(DB.getField(tableName, field));
+                        }
+                    }
+                    if (tableName.equalsIgnoreCase("students")) {
+                        for (String field : studentsFieldList) {
+                            returnArr.add(DB.getField(tableName, field));
+                        }
+                    }
+                    if (tableName.equalsIgnoreCase("grades")) {
+                        for (String field : gradesFieldList) {
+                            returnArr.add(DB.getField(tableName, field));
+                        }
+                    }
+                }
+                System.out.print(outputFormatter(returnArr));
+            }
+
+        }
+        return ret;
+        parser.close();
+    }
+
+    public String outputFormatter(ArrayList<ArrayList<Object>> inArr) {
+        return "";
     }
 }
