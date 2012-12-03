@@ -18,9 +18,13 @@ public class SQLParser
         String test = Parser.query("INSERT INTO courses VALUES (COP3504, Advanced Programming Fundamentals, Horton)");
         String test2 = Parser.query("INSERT INTO courses (course, name, instructor) VALUES (COP3505, Advanced Programming Fundamentals2, Hortona)");
         String test3 = Parser.query("SELECT * FROM courses");
+        String test4 = Parser.query("DELETE FROM courses");
+        String test5 = Parser.query("SELECT * FROM courses");
         System.out.println(test);
         System.out.println(test2);
         System.out.println(test3);
+        System.out.println(test4);
+        System.out.println(test5);
     }
 
     public String query(String query) {
@@ -62,6 +66,7 @@ public class SQLParser
                     queryType = 3;
                 }
                 else {
+                	parser.close();
                     throw new IllegalArgumentException("Error: First word must be INSERT, SELECT, DELETE, or UPDATE");
                 }
             }
@@ -148,8 +153,16 @@ public class SQLParser
             }
             if(queryType == 2 && wordNumber == 3)
             {
-                 if(in.equalsIgnoreCase("courses") || in.equalsIgnoreCase("students") || in.equalsIgnoreCase("grades")) {
+                if(in.equalsIgnoreCase("courses") || in.equalsIgnoreCase("students") || in.equalsIgnoreCase("grades")) {
                     tableName = in;
+                    if(query.split(" ").length == 3) {
+                    	DB.delete(tableName);
+                    	ret = "Done.";
+                    }
+                }
+                else {
+                	parser.close();
+                	throw new IllegalArgumentException(in + " is not a valid table name");
                 }
             }
             if(queryType == 2 && wordNumber == 4)
@@ -217,6 +230,7 @@ public class SQLParser
                             }
                             catch(Exception e)
                             {
+                            	parser.close();
                                 return "Binary comparisons (> and <) can only be done with integers";
                             }
 
@@ -285,15 +299,18 @@ public class SQLParser
                     {
                         DB.delete(tableName, i.intValue());
                     }
+                    parser.close();
+                    ret = "Done.";
                 }
                 else
                 {
                     DB.delete(tableName); // Delete all records in table
+                    parser.close();
+                    ret = "Done.";
                 }
             }
 
         }
-        parser.close();
         return ret;
     }
 
@@ -346,6 +363,9 @@ public class SQLParser
                 output += " |";
             }
             output += "\n";
+        }
+        for (int i = 0; i < tableLength; i++) {
+            output += "-";
         }
         return output;
     }
