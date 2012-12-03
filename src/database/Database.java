@@ -37,8 +37,8 @@ public class Database
 	// fills in missing ones with blanks
 	public void insert(String table, ArrayList<String> fields, ArrayList<String> values)
 	{
-		// Using courses because all tables have same orderValues method
-		values = this.courses.orderValues(fields, values);
+		
+		values = this.tables.get(table).orderValues(fields, values);
 		if(table == "courses")
 			this.courses.insert(values);
 		else if(table == "students")
@@ -131,7 +131,7 @@ public class Database
 		return this.tables.get(table).getField(field);
 	}
 	
-	public ArrayList<String> getFieldList(String table, String field)
+	public ArrayList<String> getFieldList(String table)
 	{
 		return this.tables.get(table).getFieldList();
 	}
