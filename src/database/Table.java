@@ -2,6 +2,8 @@ package database;
 import java.util.ArrayList;
 import java.util.Map;
 
+// TODO: MAKE SURE CHECKS FOR NULL COME FIRST
+
 public abstract class Table
 {
 	//Unique Id is always first field
@@ -21,9 +23,24 @@ public abstract class Table
 	// Throw error if uniqueId doesn't exist or value type is incorrect
 	protected abstract void update(String uniqueId, String field, String value);
 	
-	protected abstract ArrayList<Object> checkAndCastValues(ArrayList<String> values);
-	
 	protected abstract Object castValue(String field, String value);
+	
+	// Checks number of values, that required fields are not null, that they are the
+	// right type, and casts them. Must have the correct number of values.
+	protected ArrayList<Object> checkAndCastValues(ArrayList<String> values) 
+	{
+		ArrayList<Object> castedValues = new ArrayList<Object>(this.fields.size());
+		
+		// Check if castedValues size
+		if(values.size() != this.fields.size())
+			throw new IllegalArgumentException("Error: there must be " + this.fields.size() + " values");
+		
+		// Check and cast
+		for(int i=0; i < this.fields.size(); i++)
+			castedValues.add(this.castValue(this.fields.get(i), values.get(i)));
+		
+		return castedValues;
+	}
 	
 	// Throw error if field doesn't exist
 	protected ArrayList<Object> getField(String field)
@@ -34,18 +51,6 @@ public abstract class Table
 	protected ArrayList<String> getFieldList()
 	{
 		return this.fields;
-	}
-
-	protected int getRecordIndex(String uniqueId)
-	{
-		
-		String uniqueField = this.fields.get(0);
-		if(!(this.records.get(uniqueField).contains(uniqueId)))
-			// TODO: Throw error
-			;
-		else
-			return this.records.get(uniqueField).indexOf(uniqueId);
-		return -1;
 	}
 	
 	protected ArrayList<String> orderValues(ArrayList<String> fields, ArrayList<String> values)
@@ -85,15 +90,15 @@ public abstract class Table
 	}
 
 	// Throw error if uniqueId doesn't exist
-	protected void delete(String uniqueId)
+	protected void delete(String[] uniqueIds)
 	{
 		int recordIndex;
-		if(!(this.uniqueIdExists(uniqueId)))
+		if(!(this.uniqueIdExists(uniqueIds)))
 			// TODO: Throw error
 			;
 		else
 		{
-			recordIndex = this.getRecordIndex(uniqueId);
+			recordIndex = this.getRecordIndex(uniqueIds);
 			for(ArrayList<Object> field: this.records.values())
 				field.remove(recordIndex);
 		}
@@ -105,13 +110,75 @@ public abstract class Table
 	}
 	
 	// Return true if uniqueId Exists
-	protected boolean uniqueIdExists(String uniqueId)
+	protected boolean uniqueIdExists(String[] uniqueIds)
 	{
-		String uniqueField = this.fields.get(0);
-		Object castedValue = this.castValue(uniqueField, uniqueId);
-		if(this.records.get(uniqueField).contains(castedValue))
-			return true;
-		else
+		if(uniqueIds.length == 1)
+		{
+			String uniqueField = this.fields.get(0);
+			Object castedValue = this.castValue(uniqueField, uniqueIds[0]);
+			if(this.records.get(uniqueField).contains(castedValue))
+				return true;
+			else
+				return false;
+		}
+		else if(uniqueIds.length == 2)
+		{
+			String studentField = this.fields.get(0);
+			String courseField = this.fields.get(1);
+			Object studentCasted = this.castValue(studentField, uniqueIds[0]);
+			Object courseCasted = this.castValue(courseField, uniqueIds[1]);
+			for(int i=0; i < this.records.get(studentField).size(); i++)
+			{
+				if(this.records.get(studentField).get(i).equals(studentCasted))
+				{
+					if(this.records.get(courseField).get(i).equals(courseCasted))
+						return true;
+				}
+			}
 			return false;
+		}
+		return true;
+	}
+	
+	protected int getRecordIndex(String[] uniqueIds)
+	{
+		if(uniqueIds.length == 1)
+		{
+			String uniqueField = this.fields.get(0);
+			int index = this.records.get(uniqueField).indexOf(uniqueIds[0]);
+			if(index == -1)
+				// TODO: Throw error
+				;
+			else
+				return index;
+		}
+		else
+		{
+			String studentField = this.fields.get(0);
+			String courseField = this.fields.get(1);
+			Object studentCasted = this.castValue(studentField, uniqueIds[0]);
+			Object courseCasted = this.castValue(courseField, uniqueIds[1]);
+			for(int i=0; i < this.records.get("student").size(); i++)
+			{
+				if(this.records.get(studentField).get(i).equals(studentCasted))
+				{
+					if(this.records.get(courseField).get(i).equals(courseCasted))
+						return i;
+				}
+			}
+		}
+		return -1;
+	}
+	
+	protected String[] sArray(String stuff)
+	{
+		String[] result = {stuff};
+		return result;
+	}
+	
+	protected String[] sArray(String stuff1, String stuff2)
+	{
+		String[] result = {stuff1, stuff2};
+		return result;
 	}
 }

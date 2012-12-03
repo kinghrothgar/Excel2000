@@ -46,10 +46,10 @@ public class StudentTable
 	// Checks if student is unique and not null
 	protected void insert(Integer student, String first, String last, Integer age, Integer year)
 	{
-		if(this.uniqueIdExists(student))
-			throw new IllegalArgumentException("Error: student ID already exists");
-		else if(student == null)
+		if(student == null)
 			throw new IllegalArgumentException("Error: student ID must not be null");
+		else if(this.uniqueIdExists(sArray(student.toString())))
+			throw new IllegalArgumentException("Error: student ID already exists");
 		else
 		{
 			this.records.get("student").add(student);
@@ -100,13 +100,13 @@ public class StudentTable
 		Object castedValue;
 		// ERROR Checks:
 		castedValue = this.castValue(field, value);
-		if(!(this.uniqueIdExists(student)))
+		if(!(this.uniqueIdExists(sArray(student))))
 			throw new IllegalArgumentException("Error: " + student + " does not exists in table");
 		else if(field.equals("student"))
 			throw new IllegalArgumentException("Error: student ID cannot be changed.");
 		else
 		{
-			index = this.getRecordIndex(student);
+			index = this.getRecordIndex(sArray(student));
 			this.records.get(field).set(index, castedValue);
 		}
 	}
@@ -163,37 +163,6 @@ public class StudentTable
 				return null;
 		}
 		return -1;
-	}
-	
-	// Checks number of values, that required fields are not null, that they are the
-	// right type, and casts them. Must have the correct number of values.
-	@Override
-	protected ArrayList<Object> checkAndCastValues(ArrayList<String> values) 
-	{
-		ArrayList<Object> correct = new ArrayList<Object>(this.fields.size());
-		
-		// Check if correct size
-		if(values.size() != this.fields.size())
-			throw new IllegalArgumentException("Error: there must be " + this.fields.size() + "values");
-		
-		// Check and cast
-		correct.add(this.castValue("student", values.get(0)));
-		correct.add(this.castValue("first", values.get(1)));
-		correct.add(this.castValue("last", values.get(2)));
-		correct.add(this.castValue("age", values.get(3)));
-		correct.add(this.castValue("year", values.get(4)));
-		
-		return correct;
-	}
-	
-	// Return true if uniqueId Exists
-	protected boolean uniqueIdExists(Integer student)
-	{
-		String uniqueField = this.fields.get(0);
-		if(this.records.get(uniqueField).contains(student))
-			return true;
-		else
-			return false;
 	}
 	
 //	public static void main(String[] args)
