@@ -12,7 +12,7 @@ public class SQLParser
 
 
     // the main method only has contents for testing the parser, the final version should be empty
-    public static void main(String args[]) {
+    public static void main(String args[]) throws Exception {
         Database testDB = new Database();
         SQLParser Parser = new SQLParser(testDB);
         String test = Parser.query("INSERT INTO courses VALUES (COP3504, Advanced Programming Fundamentals, Horton)");
@@ -27,7 +27,7 @@ public class SQLParser
         System.out.println(test5);
     }
 
-    public String query(String query) {
+    public String query(String query) throws Exception {
         // queryType is set depending on what kind of query is given (e.g. INSERT, DELETE, etc)
         // INSERT = 0
         // SELECT = 1
@@ -85,12 +85,14 @@ public class SQLParser
                         in = parser.next();
                         values += in;
                     }
-                    Scanner subScanner = new Scanner(values.substring(1, values.length() - 1)).useDelimiter(", *");
+                    Scanner scnr = new Scanner(values.substring(1, values.length() - 1));
+                    Scanner subScanner = scnr.useDelimiter(", *");
                     while(subScanner.hasNext()) {
                         valueList.add(subScanner.next());
                     }
                     DB.insert(tableName, valueList);
                     subScanner.close();
+                    scnr.close();
                     ret = "Done.";
                 }
                 else {
@@ -101,7 +103,8 @@ public class SQLParser
                         in = parser.next();
                         columns += in;
                     }
-                    Scanner subScanner = new Scanner(columns.substring(1, columns.length() - 1)).useDelimiter(", *");
+                    Scanner scnr = new Scanner(columns.substring(1, columns.length() - 1));
+                    Scanner subScanner = scnr.useDelimiter(", *");
                     while(subScanner.hasNext()) {
                         columnList.add(subScanner.next());
                     }
@@ -112,12 +115,15 @@ public class SQLParser
                         in = parser.next();
                         values += in;
                     }
+                    scnr.close();
                     subScanner.close();
-                    Scanner subScanner2 = new Scanner(values.substring(1, values.length() - 1)).useDelimiter(", *");
+                    Scanner scnr2 = new Scanner(values.substring(1, values.length() - 1));
+                    Scanner subScanner2 = scnr2.useDelimiter(", *");
                     while(subScanner2.hasNext()) {
                         valueList.add(subScanner2.next());
                     }
                     DB.insert(tableName, columnList, valueList);
+                    scnr2.close();
                     subScanner2.close();
                     ret = "Done.";
                 }
