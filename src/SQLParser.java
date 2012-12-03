@@ -81,15 +81,40 @@ public class SQLParser
                         valueList.add(subScanner.next());
                     }
                     System.out.println(tableName);
-                    System.out.println(Arrays.deepToString(valueList));
+                    System.out.println(valueList.toString());
                     DB.insert(tableName, valueList);
+                    subScanner.close();
                 }
                 else {
-
+                    String columns = "";
+                    columns += in;
+                    while(!(in.contains(")"))) {
+                        ++wordNumber
+                        in = parser.next();
+                        columns += in;
+                    }
+                    Scanner subScanner = new Scanner(columns.substring(1, columns.length() - 1)).useDelimiter(", *");
+                    while(subScanner.hasNext()) {
+                        columnList.add(subScanner.next());
+                    }
+                    in = parser.next();
+                    String values = "";
+                    while(!(in.contains(")"))) {
+                        ++wordNumber;
+                        in = parser.next();
+                        values += in;
+                    }
+                    Scanner subScanner = new Scanner(values.substring(1, values.length() - 1)).useDelimiter(", *");
+                    while(subScanner.hasNext()) {
+                        valueList.add(subScanner.next());
+                    }
+                    DB.insert(tableName, columnList, valueList);
+                    subScanner.close();
                 }
             }
 
         }
         return ret;
+        parser.close();
     }
 }
