@@ -126,6 +126,16 @@ public class Database
 		
 	}
 	
+	public ArrayList<Object> getField(String table, String field)
+	{
+		return this.tables.get(table).getField(field);
+	}
+	
+	public ArrayList<String> getFieldList(String table, String field)
+	{
+		return this.tables.get(table).getFieldList();
+	}
+	
 	private String[] sArray(String stuff)
 	{
 		String[] result = {stuff};
@@ -137,11 +147,6 @@ public class Database
 		String[] result = {stuff1, stuff2};
 		return result;
 	}
-	
-//	public ArrayList<?> getField(String table, String field)
-//	{
-//		return ArrayList<?>;
-//	}
 	
 //	public static void main(String[] args)
 //	{
