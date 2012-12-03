@@ -155,19 +155,21 @@ public class SQLParser
                         for (String field : coursesFieldList) {
                             returnArr.add(DB.getField(tableName, field));
                         }
+                        System.out.print(outputFormatter(returnArr, coursesFieldList));
                     }
                     if (tableName.equalsIgnoreCase("students")) {
                         for (String field : studentsFieldList) {
                             returnArr.add(DB.getField(tableName, field));
                         }
+                        System.out.print(outputFormatter(returnArr, studentsFieldList));
                     }
                     if (tableName.equalsIgnoreCase("grades")) {
                         for (String field : gradesFieldList) {
                             returnArr.add(DB.getField(tableName, field));
                         }
+                        System.out.print(outputFormatter(returnArr, gradesFieldList));
                     }
                 }
-                System.out.print(outputFormatter(returnArr));
             }
             if(queryType == 2 && wordNumber == 3)
             {
@@ -191,11 +193,11 @@ public class SQLParser
             }
 
         }
-        return ret;
         parser.close();
+        return ret;
     }
 
-    public String outputFormatter(ArrayList<ArrayList<Object>> inArr) {
+    public String outputFormatter(ArrayList<ArrayList<Object>> dataArr, ArrayList<String> fieldsArr) {
         return "";
     }
 }
