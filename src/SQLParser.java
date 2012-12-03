@@ -128,7 +128,9 @@ public class SQLParser
                     // Handle where clause
                 }
                 else
-                    ;// Delete all records in table
+                {
+                    DB.delete(tableName); // Delete all records in table
+                }
             }
         }
         parser.close();
