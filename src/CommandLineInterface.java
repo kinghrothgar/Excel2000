@@ -57,7 +57,9 @@ public class CommandLineInterface
 
 	public void start()
 	{
-		out.println("SQL Command Line Interface\n");
+		DB = new Database();
+		parser = new SQLParser(DB);
+		out.println("SQL Command Line Interface");
 		mainMenu(true);
 	}
 	
@@ -67,17 +69,16 @@ public class CommandLineInterface
 	
 	private void mainMenu(boolean listHelp)
 	{
-		out.println("Main Menu");
+		out.println("\nMain Menu");
 		/*
 		 * Options:
 		 * 1. Manual SQL commands
-		 * 2. Save/load database
-		 * 3. Login to role
-		 * 4. Exit
+		 * 2. Load table
+		 * 3. Save tables
+		 * 4. Login to role
+		 * 5. Exit
 		 */
-		// If DB already initialized, choice 1 should read "Close database"
-		String option2 = DB == null ? "Save/load database" : "Close database";
-		String[] options = {"Manual SQL Commands", option2, "Login to role", "Exit"};
+		String[] options = {"Manual SQL Commands", "Load table", "Save tables", "Login to role", "Exit"};
 		if (listHelp) printOptions(options);
 		switch(getChoice(options.length))
 		{
@@ -86,49 +87,22 @@ public class CommandLineInterface
 			mainMenu(true);
 			break;
 		case 2:
-			if (DB == null)
-				initializeDatabase(true);
-			else
-				closeDatabase(true);
-			break;
-		case 3:
-			loginToRole(true);
-			break;
-		case 4:
-			// Exit
-			if (DB != null)
-				closeDatabase(false);
-			input.close();
-			out.println("Goodbye!");
-			break;
-		default:
-			throw new ArrayIndexOutOfBoundsException();
-		}
-	}
-	
-	private void initializeDatabase(boolean listHelp)
-	{
-		out.println("Save/load database");
-		/*
-		 * Options:
-		 * 1. Load table from File
-		 * 2. Store table to File
-		 * 3. Back to main menu
-		 */
-		String[] options = {"Load table from file", "Store table to file", "Go back to main menu"};
-		if (listHelp) printOptions(options);
-		switch(getChoice(options.length))
-		{
-		case 1:
 			loadFile();
 			mainMenu(true);
 			break;
-		case 2:
+		case 3:
 			saveFile(true);
 			mainMenu(true);
 			break;
-		case 3:
-			mainMenu(true);
+		case 4:
+			loginToRole(true);
+			break;
+		case 5:
+			// Exit
+			if (DB != null)
+				closeDatabase();
+			//input.close();
+			out.println("Goodbye!");
 			break;
 		default:
 			throw new ArrayIndexOutOfBoundsException();
@@ -137,6 +111,7 @@ public class CommandLineInterface
 	
 	private void loadFile()
 	{
+		out.println("\nImport table from file");
 		/*
 		 * Options:
 		 * 1. Load from CSV file
@@ -149,11 +124,9 @@ public class CommandLineInterface
 		{
 		case 1:
 			loadFileCSV();
-			mainMenu(true);
 			break;
 		case 2:
 			loadFileXML();
-			mainMenu(true);
 			break;
 		case 3:
 			return;
@@ -162,8 +135,9 @@ public class CommandLineInterface
 		}
 	}
 	
-	private void loadFileCSV() // TODO
+	private void loadFileCSV()
 	{
+		out.println("\nImport CSV table");
 		/*
 		 * Options:
 		 * 1. Students table
@@ -192,26 +166,29 @@ public class CommandLineInterface
 		}
 		try
 		{
-			String filepath = prompt("Enter filepath");
+			String filepath = prompt("Load from file");
+			if (!filepath.endsWith(".csv"))
+				filepath = filepath + ".csv";
 			Scanner inScanner = new Scanner(new File(filepath));
 			while(inScanner.hasNextLine())
 			{
 				String values = inScanner.nextLine();
 				String query = String.format("INSERT INTO %s VALUES (%s)",
 						tableName, values);
-				try
-				{
+				try{
 					parser.query(query);
 				}catch (Exception e)
 				{
 					out.println(e.getMessage());
 				}
 			}
+			out.println("Import successful.");
 			inScanner.close();
 		}
 		catch (FileNotFoundException e)
 		{
 			out.println("File not found.");
+			loadFileCSV();
 		}
 		catch (Exception e)
 		{
@@ -221,9 +198,7 @@ public class CommandLineInterface
 	
 	private void loadFileXML()
 	{
-		Database oldDatabase = DB;
-		DB = new Database();
-		parser = new SQLParser(DB);
+		out.println("\nImport XML table");
 		String inFilepath = prompt("Load from file");
 		if (inFilepath.equals(""))
 			return;
@@ -240,7 +215,6 @@ public class CommandLineInterface
 				out.println("Error: File not found");
 			else
 				out.println("Error: File not valid");
-			DB = oldDatabase;
 		}
 		catch (XMLStreamException e)
 		{
@@ -259,13 +233,11 @@ public class CommandLineInterface
 		if (backToMain) mainMenu(true);
 	}
 	
-	private void closeDatabase(boolean backToMain)
+	private void closeDatabase()
 	{
 		// TODO: Only prompt if changes were made
 		if (prompt("Save table? (Y/N)").equalsIgnoreCase("Y"))
 			saveFile(false);
-		DB = null;
-		if (backToMain) mainMenu(true);
 	}
 	
 	private void loginToRole(boolean listHelp)
@@ -376,8 +348,11 @@ public class CommandLineInterface
 	
 	private void directDataEntry()
 	{
-		if (DB == null) DB = new Database();
-		parser = new SQLParser(DB);
+		if (DB == null)
+		{
+			DB = new Database();
+			parser = new SQLParser(DB);
+		}
 		String query;
 		do
 		{
@@ -706,7 +681,12 @@ public class CommandLineInterface
 				throw new ArrayIndexOutOfBoundsException(choice);
 			return choice;
 		}
-		catch (Exception e)
+		catch (ArrayIndexOutOfBoundsException e)
+		{
+			out.printf("Please input an integer from 1 to %d.%n", numChoices);
+			return getChoice(numChoices);
+		}
+		catch (IllegalArgumentException e)
 		{
 			out.printf("Please input an integer from 1 to %d.%n", numChoices);
 			return getChoice(numChoices);
