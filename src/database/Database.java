@@ -37,20 +37,15 @@ public class Database
 	// fills in missing ones with blanks
 	public void insert(String table, ArrayList<String> fields, ArrayList<String> values)
 	{
-		
 		values = this.tables.get(table).orderValues(fields, values);
-		if(table == "courses")
-			this.courses.insert(values);
-		else if(table == "students")
-			this.students.insert(values);
-		else if(table == "grades")
+		if(table.equals("courses") || table.equals("students"))
+			this.tables.get(table).insert(values);
+		else if(table.equals("grades"))
 		{
-			
-			// TODO: Verify this castings stuff
 			if(!(this.students.uniqueIdExists(sArray(values.get(0)))))
 				throw new IllegalArgumentException("Error: student ID must exist in students table");
-			if(!(this.courses.uniqueIdExists(sArray(values.get(0)))))
-				throw new IllegalArgumentException("Error: courses number must exist in courses table");
+			else if(!(this.courses.uniqueIdExists(sArray(values.get(1)))))
+				throw new IllegalArgumentException("Error: course number must exist in courses table");
 			this.grades.insert(values);
 		}
 		else
@@ -61,18 +56,16 @@ public class Database
 	// Adds values in "standard" order must at least have required unique entries for table
 	public void insert(String table, ArrayList<String> values)
 	{
-		if(table == "courses")
-			this.courses.insert(values);
-		else if(table == "students")
-			this.students.insert(values);
-		else if(table == "grades")
+		if(table.equals("courses") || table.equals("students"))
+			this.tables.get(table).insert(values);
+		else if(table.equals("grades"))
 		{
-			if(!(this.students.records.get("student").contains(values.get(0))))
-				// TODO: throw error
-				;
-			else if(!(this.students.records.get("course").contains(values.get(1))))
-				// TODO: throw error
-				;
+			if(values.size() < 2)
+				throw new IllegalArgumentException("Error: student ID and course number are required");
+			else if(!(this.students.uniqueIdExists(sArray(values.get(0)))))
+				throw new IllegalArgumentException("Error: student ID must exist in students table");
+			else if(!(this.courses.uniqueIdExists(sArray(values.get(1)))))
+				throw new IllegalArgumentException("Error: course number must exist in courses table");
 			this.grades.insert(values);
 		}
 		else
