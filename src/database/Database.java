@@ -146,6 +146,14 @@ public class Database
 		else
 			throw new IllegalArgumentException("Error: Invalid table, must be courses, students, or grades.");
 	}
+	
+	public Integer getRecordCount(String table)
+	{
+		if(this.tables.containsKey(table))
+			return this.tables.get(table).getRecordCount();
+		else
+			throw new IllegalArgumentException("Error: Invalid table, must be courses, students, or grades.");
+	}
 
 	public ArrayList<Object> getField(String table, String field)
 	{

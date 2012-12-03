@@ -158,6 +158,11 @@ public abstract class Table
 		return true;
 	}
 	
+	public Integer getRecordCount()
+	{
+		return this.getField(this.fields.get(0)).size();
+	}
+	
 	protected int getRecordIndex(String[] uniqueIds)
 	{
 		if(uniqueIds.length == 1)
