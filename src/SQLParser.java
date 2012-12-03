@@ -297,42 +297,56 @@ public class SQLParser
     }
 
     public String outputFormatter(ArrayList<ArrayList<Object>> dataArr, ArrayList<String> fieldsArr) {
-        int tableLength = 0;
-        int biggestWidth = 0;
-        int biggestWidth2 = 0;
+        int[] columnWidths = new int[fieldsArr.size()];
+        int[] columnWidths2 = new int[fieldsArr.size()];
+    	int tableLength = 0;
         int tableLength2 = 0;
         int tableHeight = 0;
         String output = "";
-        for (String field : fieldsArr) {
-            if(field.length() > biggestWidth) {
-                biggestWidth = field.length();
-            }
-            tableLength += field.length() + 4;
+        for (int i = 0; i < fieldsArr.size(); i++) {
+            columnWidths[i] = fieldsArr.get(i).length();
         }
-        for (ArrayList<String> fArr : dataArr) {
+        for (int i = 0; i < dataArr.size(); i++) {
+        	ArrayList<Object> fArr = dataArr.get(i);
             for (Object o : fArr) {
-                if(o.toString.length() > biggestWidth2) {
-                    biggestWidth2 = o.toString.length();
+                if(o.toString().length() > columnWidths2[i]) {
+                	columnWidths2[i] = o.toString().length();
                 }
-                tableLength2 = biggestWidth2 + 4;
             }
+        }
+        for (int i = 0; i < columnWidths.length; i++) {
+        	if(columnWidths[i] < columnWidths2[i])
+        		columnWidths[i] = columnWidths2[i];
+        	System.out.println(columnWidths[i]);
+        }
+        for (int i = 0; i < columnWidths.length; i++) {
+        	tableLength += columnWidths[i];
         }
         for (int i = 0; i < tableLength; i++) {
             output += "-";
         }
         output += "\n";
-        for (String field : fieldsArr) {
-            output += "| " + field + " |";
+        for (int i = 0; i < columnWidths.length; i++) {
+            output += "| " + fieldsArr.get(i);
+            for (int j = 0; j < columnWidths[i] - fieldsArr.get(i).length(); j++) {
+            	output += " ";
+            }
+            output += " |";
         }
+        output += "\n";
         for (int i = 0; i < tableLength; i++) {
             output += "-";
         }
         output += "\n";
-        tableHeight = dataArr.get(0).size();
-        for (int j = 0; j < fieldsArr.size(); j++) {
-            for (int i = 0; i < tableHeight; i++) {
-                output += "| " + dataArr.get(i).get(j) + " |";
+        for (int j = 0; j < dataArr.get(0).size(); j++) {
+            for (int i = 0; i < dataArr.size(); i++) {
+                output += "| " + dataArr.get(i).get(j);
+                for (int k = 0; k < columnWidths[i] - dataArr.get(i).get(j).toString().length(); k++) {
+                	output += " ";
+                }
+                output += " |";
             }
+            output += "\n";
         }
         return output;
     }
