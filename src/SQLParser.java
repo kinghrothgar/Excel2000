@@ -298,10 +298,24 @@ public class SQLParser
 
     public String outputFormatter(ArrayList<ArrayList<Object>> dataArr, ArrayList<String> fieldsArr) {
         int tableLength = 0;
+        int biggestWidth = 0;
+        int biggestWidth2 = 0;
+        int tableLength2 = 0;
         int tableHeight = 0;
         String output = "";
         for (String field : fieldsArr) {
+            if(field.length() > biggestWidth) {
+                biggestWidth = field.length();
+            }
             tableLength += field.length() + 4;
+        }
+        for (ArrayList<String> fArr : dataArr) {
+            for (Object o : fArr) {
+                if(o.toString.length() > biggestWidth2) {
+                    biggestWidth2 = o.toString.length();
+                }
+                tableLength2 = biggestWidth2 + 4;
+            }
         }
         for (int i = 0; i < tableLength; i++) {
             output += "-";
