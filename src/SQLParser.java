@@ -322,6 +322,7 @@ public class SQLParser
         for (int i = 0; i < columnWidths.length; i++) {
         	tableLength += columnWidths[i];
         }
+        tableLength += columnWidths.length * 4;
         for (int i = 0; i < tableLength; i++) {
             output += "-";
         }
