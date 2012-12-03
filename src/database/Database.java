@@ -76,56 +76,90 @@ public class Database
 	// or field is a uniqueId
 	public void update(String table, String field, String value)
 	{
-
+		if(this.tables.containsKey(table))
+			this.tables.get(table).update(field, value);
+		else
+			throw new IllegalArgumentException("Error: Invalid table, must be courses, students, or grades.");
 	}
 
-	// Throw error if types aren't right or things are missing
-	public void update(String table, String uniqueId, String field, String value)
-	{
-
-	}
+//	// Throw error if types aren't right or things are missing
+//	public void update(String table, String uniqueId, String field, String value)
+//	{
+//		
+//	}
 
 	// Throw error if types aren't right or things are missing
 	public void update(String table, int recordIndex, String field, String value)
 	{
-
+		if(this.tables.containsKey(table))
+			this.tables.get(table).update(recordIndex, field, value);
+		else
+			throw new IllegalArgumentException("Error: Invalid table, must be courses, students, or grades.");
 	}
 
 	// TODO: Do intertable checks
 	public void delete(String table)
+			throws Exception
 	{
-
+		if(table.equals("students") || table.equals("courses"))
+		{
+			if(this.tables.get("grades").records.get("student").isEmpty())
+				this.tables.get(table).delete();
+			else
+				throw new Exception("Error: grades table must be empty before" + table + " can be deleted.");
+		}
+		else if(table.equals("grades"))
+			this.tables.get("grades").delete();
+		else
+			throw new IllegalArgumentException("Error: Invalid table, must be courses, students, or grades.");
 	}
 
 	// Throw error if deleting from students or courses if student or course exist in
 	// in the respective columns in grades
-	public void delete(String table, String uniqueId)
-	{
-		if(table == "courses")
-
-			this.courses.delete(sArray(uniqueId));
-		else if(table == "students")
-			this.students.delete(sArray(uniqueId));
-		else if(table == "grades")
-			// TODO: Extra checks for grades table
-			;
-		else
-			// TODO: Raise error, not valid table
-			throw new IllegalArgumentException("Error: Invalid table, must be courses, students, or grades.");
-	}
-
 	public void delete(String table, int recordIndex)
 	{
-
+		ArrayList<Object> record = new ArrayList<Object>();
+		if(table.equals("courses"))
+		{
+			record = this.courses.getRecord(recordIndex);
+			if(this.grades.fieldContains("course", record.get(0)))
+			{
+				throw new IllegalArgumentException("Error: All instances of course number " + record.get(0) + "must be" +
+						" deleted from grades table first");
+			}
+			else
+				this.courses.delete(recordIndex);
+		}
+		else if(table.equals("students"))
+		{
+			record = this.students.getRecord(recordIndex);
+			if(this.grades.fieldContains("student", record.get(0)))
+			{
+				throw new IllegalArgumentException("Error: All instances of student ID " + record.get(0) + "must be" +
+						" deleted from grades table first");
+			}
+			else
+				this.students.delete(recordIndex);
+		}
+		else if(table.equals("grades"))
+			this.grades.delete(recordIndex);
+		else
+			throw new IllegalArgumentException("Error: Invalid table, must be courses, students, or grades.");
 	}
 
 	public ArrayList<Object> getField(String table, String field)
 	{
-		return this.tables.get(table).getField(field);
+		if(this.tables.containsKey(table))
+			return this.tables.get(table).getField(field);
+		else
+			throw new IllegalArgumentException("Error: Invalid table, must be courses, students, or grades.");
 	}
 	public ArrayList<String> getFieldList(String table)
 	{
-		return this.tables.get(table).getFieldList();
+		if(this.tables.containsKey(table))
+			return this.tables.get(table).getFieldList();
+		else
+			throw new IllegalArgumentException("Error: Invalid table, must be courses, students, or grades.");
 	}
 
 	private String[] sArray(String stuff)
@@ -143,15 +177,16 @@ public class Database
 //	public static void main(String[] args)
 //	{
 //		Database test = new Database();
-//		ArrayList<Object> values = new ArrayList<Object>();
-//			values.add((Integer) 88694986);
+//		ArrayList<String> values = new ArrayList<String>();
+//			values.add("88694986");
 //			values.add("Luke");
-//			values.add((Integer) 2013);
+//			values.add("2013");
 //		ArrayList<String> fields = new ArrayList<String>();
 //			fields.add("student");
 //			fields.add("first");
 //			fields.add("year");
-//		System.out.println("student: " + test.students.getField("student").toString());
+//		test.insert("students", fields, values);
+//		System.out.println("student: " + test.students.getField("student").toString() + " " + test.students.getField("student").get(0).getClass().toString());
 //		System.out.println("first: " + test.students.getField("first").toString());
 //		System.out.println("last: " + test.students.getField("last").toString());
 //		System.out.println("age: " + test.students.getField("age").toString());

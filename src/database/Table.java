@@ -21,7 +21,9 @@ public abstract class Table
 	protected abstract void update(String field, String value);
 	
 	// Throw error if uniqueId doesn't exist or value type is incorrect
-	protected abstract void update(String uniqueId, String field, String value);
+	//protected abstract void update(String uniqueId, String field, String value);
+	
+	protected abstract void update(int recordIndex, String field, String value);
 	
 	protected abstract Object castValue(String field, String value);
 	
@@ -104,11 +106,27 @@ public abstract class Table
 		}
 	}
 	
+	protected void delete(int recordIndex)
+	{
+		for(ArrayList<Object> field: this.records.values())
+			field.remove(recordIndex);
+	}
+	
 	protected boolean isValidName(String name)
 	{
 		return name.matches("[a-zA-z]+([ '-][a-zA-Z]+)*");
 	}
-
+	
+	protected boolean fieldContains(String field, Object value)
+	{
+		if(!(this.fields.contains(field)))
+			throw new IllegalArgumentException("Error: " + field + " is not a valid field");
+		else if(this.records.get(field).contains(value))
+			return true;
+		else
+			return false;
+	}
+	
 	// Return true if uniqueId Exists
 	protected boolean uniqueIdExists(String[] uniqueIds)
 	{
@@ -168,6 +186,14 @@ public abstract class Table
 			}
 		}
 		return -1;
+	}
+	
+	protected ArrayList<Object> getRecord(int recordIndex)
+	{
+		ArrayList<Object> record = new ArrayList<Object>();
+		for(String field: this.fields)
+			record.add(this.records.get(field).get(recordIndex));
+		return record;
 	}
 	
 	protected String[] sArray(String stuff)

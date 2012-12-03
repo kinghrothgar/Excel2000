@@ -80,12 +80,12 @@ public class GradeTable
 		}
 	}
 	
-	// TODO: Block this
-	@Override
-	protected void update(String uniqueId, String field, String value) 
-	{
-		
-	}
+//	// TODO: Block this
+//	@Override
+//	protected void update(String uniqueId, String field, String value) 
+//	{
+//		
+//	}
 	
 	protected void update(String student, String course, String field, String value)
 	{
@@ -102,6 +102,18 @@ public class GradeTable
 			index = this.getRecordIndex(sArray(student, course));
 			this.records.get(field).set(index, castedValue);
 		}
+	}
+	
+	@Override
+	protected void update(int recordIndex, String field, String value)
+	{
+		Object castedValue;
+		// Error checks
+		castedValue = this.castValue(field, value);
+		if(field.equals("student") || field.equals("course"))
+			throw new IllegalArgumentException("Error: neither student ID nor course number can be changed.");
+		else
+			this.records.get(field).set(recordIndex, castedValue);
 	}
 	
 	// Checks if field exists, is not a unique field, and if it's correct type

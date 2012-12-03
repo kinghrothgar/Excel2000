@@ -74,22 +74,34 @@ public class CourseTable
 		}
 	}
 
+//	@Override
+//	protected void update(String course, String field, String value)
+//	{
+//		int index;
+//		Object castedValue;
+//		// ERROR Checks:
+//		castedValue = this.castValue(field, value);
+//		if(!(this.uniqueIdExists(sArray(course))))
+//			throw new IllegalArgumentException("Error: " + course + "does not exists in table");
+//		else if(field.equals("course"))
+//			throw new IllegalArgumentException("Error: course name cannot be changed.");
+//		else
+//		{
+//			index = this.getRecordIndex(sArray(course));
+//			this.records.get(field).set(index, castedValue);
+//		}
+//	}
+	
 	@Override
-	protected void update(String course, String field, String value)
+	protected void update(int recordIndex, String field, String value)
 	{
-		int index;
 		Object castedValue;
-		// ERROR Checks:
+		// Error checks
 		castedValue = this.castValue(field, value);
-		if(!(this.uniqueIdExists(sArray(course))))
-			throw new IllegalArgumentException("Error: " + course + "does not exists in table");
-		else if(field.equals("course"))
+		if(field.equals("course"))
 			throw new IllegalArgumentException("Error: course name cannot be changed.");
 		else
-		{
-			index = this.getRecordIndex(sArray(course));
-			this.records.get(field).set(index, castedValue);
-		}
+			this.records.get(field).set(recordIndex, castedValue);
 	}
 	
 	// Checks if field exists, is not a unique field, and if it's correct type
