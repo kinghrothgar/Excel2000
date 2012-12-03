@@ -82,7 +82,8 @@ public class GradeTable
 	
 	// TODO: Block this
 	@Override
-	protected void update(String uniqueId, String field, String value) {
+	protected void update(String uniqueId, String field, String value) 
+	{
 		
 	}
 	

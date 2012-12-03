@@ -3,13 +3,13 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 
-public class Database 
+public class Database
 {
 	private CourseTable courses;
 	private StudentTable students;
 	private GradeTable grades;
 	private Map<String, Table> tables;
-	
+
 	public Database()
 	{
 		this.courses = new CourseTable();
@@ -20,19 +20,19 @@ public class Database
 			this.tables.put("students", this.students);
 			this.tables.put("grades", this.grades);
 	}
-	
+
 	// Load from file.  Throws error if location doesn't exist or fails to load
 //	public Database(Folder location)
 //	{
-//		
+//
 //	}
-	
+
 	// Saves database to file. Throws error if location doesn't exist or save fails
 //	public void save(Folder location)
 //	{
-//		
+//
 //	}
-	
+
 	// Checks to make sure required fields (for the unique ids) are present and
 	// fills in missing ones with blanks
 	public void insert(String table, ArrayList<String> fields, ArrayList<String> values)
@@ -52,7 +52,7 @@ public class Database
 			// TODO: Raise error, not valid table
 			throw new IllegalArgumentException("Error: Invalid table, must be courses, students, or grades.");
 	}
-	
+
 	// Adds values in "standard" order must at least have required unique entries for table
 	public void insert(String table, ArrayList<String> values)
 	{
@@ -71,38 +71,38 @@ public class Database
 		else
 			throw new IllegalArgumentException("Error: Invalid table, must be courses, students, or grades.");
 	}
-	
+
 	// Throw error if field doesn't exist, value is the wrong type, table doesn't exist,
 	// or field is a uniqueId
 	public void update(String table, String field, String value)
 	{
-		
+
 	}
-	
+
 	// Throw error if types aren't right or things are missing
 	public void update(String table, String uniqueId, String field, String value)
 	{
-		
+
 	}
-	
+
 	// Throw error if types aren't right or things are missing
 	public void update(String table, int recordIndex, String field, String value)
 	{
-		
+
 	}
-	
+
 	// TODO: Do intertable checks
 	public void delete(String table)
 	{
-		
+
 	}
-	
+
 	// Throw error if deleting from students or courses if student or course exist in
 	// in the respective columns in grades
 	public void delete(String table, String uniqueId)
 	{
 		if(table == "courses")
-			
+
 			this.courses.delete(sArray(uniqueId));
 		else if(table == "students")
 			this.students.delete(sArray(uniqueId));
@@ -113,34 +113,33 @@ public class Database
 			// TODO: Raise error, not valid table
 			throw new IllegalArgumentException("Error: Invalid table, must be courses, students, or grades.");
 	}
-	
+
 	public void delete(String table, int recordIndex)
 	{
-		
+
 	}
-	
+
 	public ArrayList<Object> getField(String table, String field)
 	{
 		return this.tables.get(table).getField(field);
 	}
-	
 	public ArrayList<String> getFieldList(String table)
 	{
 		return this.tables.get(table).getFieldList();
 	}
-	
+
 	private String[] sArray(String stuff)
 	{
 		String[] result = {stuff};
 		return result;
 	}
-	
+
 	private String[] sArray(String stuff1, String stuff2)
 	{
 		String[] result = {stuff1, stuff2};
 		return result;
 	}
-	
+
 //	public static void main(String[] args)
 //	{
 //		Database test = new Database();

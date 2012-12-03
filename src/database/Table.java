@@ -108,7 +108,7 @@ public abstract class Table
 	{
 		return name.matches("[a-zA-z]+([ '-][a-zA-Z]+)*");
 	}
-	
+
 	// Return true if uniqueId Exists
 	protected boolean uniqueIdExists(String[] uniqueIds)
 	{
