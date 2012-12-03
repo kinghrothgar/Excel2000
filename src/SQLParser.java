@@ -15,16 +15,13 @@ public class SQLParser
     public static void main(String args[]) throws Exception {
         Database testDB = new Database();
         SQLParser Parser = new SQLParser(testDB);
-        String test = Parser.query("INSERT INTO courses VALUES (COP3504, Advanced Programming Fundamentals, Horton)");
-        String test2 = Parser.query("INSERT INTO courses (course, name, instructor) VALUES (COP3505, Advanced Programming Fundamentals2, Hortona)");
-        String test3 = Parser.query("SELECT * FROM courses");
-        String test4 = Parser.query("DELETE FROM courses");
-        String test5 = Parser.query("SELECT * FROM courses");
-        System.out.println(test);
-        System.out.println(test2);
-        System.out.println(test3);
-        System.out.println(test4);
-        System.out.println(test5);
+        System.out.println(Parser.query("INSERT INTO courses VALUES (COP3504, Advanced Programming Fundamentals, Horton)"));
+        System.out.println(Parser.query("INSERT INTO courses (course, name, instructor) VALUES (COP3505, Advanced Programming Fundamentals2, Hortona)"));
+        System.out.println(Parser.query("SELECT * FROM courses"));
+        System.out.println(Parser.query("SELECT course FROM courses"));
+        System.out.println(Parser.query("SELECT course, name FROM courses"));
+        System.out.println(Parser.query("DELETE FROM courses"));
+        System.out.println(Parser.query("SELECT * FROM courses"));
     }
 
     public String query(String query) throws Exception {
@@ -85,14 +82,13 @@ public class SQLParser
                         in = parser.next();
                         values += in;
                     }
-                    Scanner scnr = new Scanner(values.substring(1, values.length() - 1));
-                    Scanner subScanner = scnr.useDelimiter(", *");
+                    Scanner subScanner = new Scanner(values.substring(1, values.length() - 1));
+                    subScanner.useDelimiter(", *");
                     while(subScanner.hasNext()) {
                         valueList.add(subScanner.next());
                     }
                     DB.insert(tableName, valueList);
                     subScanner.close();
-                    scnr.close();
                     ret = "Done.";
                 }
                 else {
@@ -103,8 +99,8 @@ public class SQLParser
                         in = parser.next();
                         columns += in;
                     }
-                    Scanner scnr = new Scanner(columns.substring(1, columns.length() - 1));
-                    Scanner subScanner = scnr.useDelimiter(", *");
+                    Scanner subScanner = new Scanner(columns.substring(1, columns.length() - 1));
+                    subScanner.useDelimiter(", *");
                     while(subScanner.hasNext()) {
                         columnList.add(subScanner.next());
                     }
@@ -115,15 +111,13 @@ public class SQLParser
                         in = parser.next();
                         values += in;
                     }
-                    scnr.close();
                     subScanner.close();
-                    Scanner scnr2 = new Scanner(values.substring(1, values.length() - 1));
-                    Scanner subScanner2 = scnr2.useDelimiter(", *");
+                    Scanner subScanner2 = new Scanner(values.substring(1, values.length() - 1));
+                    subScanner2.useDelimiter(", *");
                     while(subScanner2.hasNext()) {
                         valueList.add(subScanner2.next());
                     }
                     DB.insert(tableName, columnList, valueList);
-                    scnr2.close();
                     subScanner2.close();
                     ret = "Done.";
                 }
@@ -131,6 +125,7 @@ public class SQLParser
             if(queryType == 1 && wordNumber == 2) {
                 ArrayList<ArrayList<Object>> returnArr = new ArrayList<ArrayList<Object>>();
                 if(in.equals("*")) {
+                    ++wordNumber;
                     ++wordNumber;
                     in = parser.next();
                     in = parser.next();
@@ -154,6 +149,118 @@ public class SQLParser
                             returnArr.add(DB.getField(tableName, field));
                         }
                         ret = outputFormatter(returnArr, gradesFieldList);
+                    }
+                }
+                else {
+                	ArrayList<String> inputTables = new ArrayList<String>();
+                	ArrayList<String> inputFields = new ArrayList<String>();
+                	ArrayList<ArrayList<Object>> joinedList = new ArrayList<ArrayList<Object>>(); // this list is for holding the final joined list as a result of a JOIN command
+                	ArrayList<String> joinFields = new ArrayList<String>();
+                	boolean JWO = false; // does this statement include a JOIN, WHERE, or ORDER clause
+                	if(in.contains(",")) {
+                        String inField = "";
+                        while (!in.contains("FROM")) {
+                            inField += in;
+                            in = parser.next();
+                        }
+                        Scanner fieldScanner = new Scanner(inField);
+                        fieldScanner.useDelimiter(",");
+                        while (fieldScanner.hasNext()) {
+                            inputFields.add(fieldScanner.next());
+                        }
+                        fieldScanner.close();
+                        in = parser.next();
+                        inputTables.add(in);
+                        while(parser.hasNext()) {
+                        	in = parser.next();
+                        	if(in.equalsIgnoreCase("JOIN")) {
+                        		in = parser.next();
+                                inputTables.add(in);
+                        		in = parser.next();
+                        		in = parser.next();
+                        		if(in.contains(inputTables.get(0))) {
+                        			joinFields.add(0, in.split("\\.")[1]);
+                        		}
+                        		else if(in.contains(inputTables.get(1))) { 
+                        			joinFields.add(1, in.split("\\.")[1]);
+                        		}
+                        		else {
+                        			throw new IllegalArgumentException("Syntax Error, make sure your join statement is correctly formed");
+                        		}
+                        		in = parser.next();
+                        		if(in.contains(inputTables.get(0))) {
+                        			joinFields.add(0, in.split("\\.")[1]);
+                        		}
+                        		else if(in.contains(inputTables.get(1))) { 
+                        			joinFields.add(1, in.split("\\.")[1]);
+                        		}
+                        		else {
+                        			throw new IllegalArgumentException("Syntax Error, make sure your join statement is correctly formed");
+                        		}
+                        		// TODO finish up creating joined list
+                        	}
+                        	if(in.equalsIgnoreCase("WHERE")) {
+                        		// TODO Handle WHERE
+                        	}
+                        	if(in.equalsIgnoreCase("ORDER")) {
+                        		// TODO Handle ORDER
+                        	}
+                        }
+                        
+                        // TODO Handle returnArr creation considering multiple fields
+                        
+                	}
+                    else {
+                        inputFields.add(in);
+                        in = parser.next(); // here it's on FROM
+                        in = parser.next();
+                        inputTables.add(in);
+                        while(parser.hasNext()) {
+                        	in = parser.next();
+                        	if(in.equalsIgnoreCase("JOIN")) {
+                        		in = parser.next();
+                                inputTables.add(in);
+                        		in = parser.next();
+                        		in = parser.next();
+                        		if(in.contains(inputTables.get(0))) {
+                        			joinFields.add(0, in.split("\\.")[1]);
+                        		}
+                        		else if(in.contains(inputTables.get(1))) { 
+                        			joinFields.add(1, in.split("\\.")[1]);
+                        		}
+                        		else {
+                        			throw new IllegalArgumentException("Syntax Error, make sure your join statement is correctly formed");
+                        		}
+                        		in = parser.next();
+                        		if(in.contains(inputTables.get(0))) {
+                        			joinFields.add(0, in.split("\\.")[1]);
+                        		}
+                        		else if(in.contains(inputTables.get(1))) { 
+                        			joinFields.add(1, in.split("\\.")[1]);
+                        		}
+                        		else {
+                        			throw new IllegalArgumentException("Syntax Error, make sure your join statement is correctly formed");
+                        		}
+                        		// TODO finish up creating joined list
+                        	}
+                        	if(in.equalsIgnoreCase("WHERE")) {
+                        		// TODO Handle WHERE
+                        	}
+                        	if(in.equalsIgnoreCase("ORDER")) {
+                        		// TODO Handle ORDER
+                        	}
+                        }
+                        
+                        if(!JWO) {
+                        	for (String field : inputFields) {
+                        		returnArr.add(DB.getField(inputTables.get(0), field));
+                        	}
+                        	ret = outputFormatter(returnArr, inputFields);
+                        }
+                        else {
+                        	// TODO Handle cases where there is JOIN, WHERE, ORDER
+                        }
+                        
                     }
                 }
             }
@@ -182,15 +289,16 @@ public class SQLParser
                         conditions.add(parser.next());
                     }
 
-                    int conditionType; // 0 for OR 1 for AND
-
-                    if(conditions.get(1).equalsIgnoreCase("OR"))
-                    {
-                        conditionType = 0;
-                    }
-                    else
-                    {
-                        conditionType = 1;
+                    int conditionType = -1; // 0 for OR 1 for AND -1 for neither
+                    if(conditions.size() > 1) {
+                        if(conditions.get(1).equalsIgnoreCase("OR"))
+                        {
+                            conditionType = 0;
+                        }
+                        else
+                        {
+                            conditionType = 1;
+                        }
                     }
                     ArrayList<Integer> removeList = new ArrayList<Integer>();
                     if(conditionType == 0)
@@ -242,6 +350,8 @@ public class SQLParser
 
                             i++;
                         }
+                    }
+                    else if(conditionType == -1) {
                     }
                     else
                     {
