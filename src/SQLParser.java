@@ -89,7 +89,7 @@ public class SQLParser
                     String columns = "";
                     columns += in;
                     while(!(in.contains(")"))) {
-                        ++wordNumber
+                        ++wordNumber;
                         in = parser.next();
                         columns += in;
                     }
@@ -104,7 +104,7 @@ public class SQLParser
                         in = parser.next();
                         values += in;
                     }
-                    Scanner subScanner = new Scanner(values.substring(1, values.length() - 1)).useDelimiter(", *");
+                    subScanner = new Scanner(values.substring(1, values.length() - 1)).useDelimiter(", *");
                     while(subScanner.hasNext()) {
                         valueList.add(subScanner.next());
                     }
@@ -112,9 +112,27 @@ public class SQLParser
                     subScanner.close();
                 }
             }
-
+            if(queryType == 2 && wordNumber == 3)
+            {
+                 if(in.equalsIgnoreCase("courses") || in.equalsIgnoreCase("students") || in.equalsIgnoreCase("grades")) {
+                    tableName = in;
+                }
+                else {
+                    throw new IllegalArgumentException("Invalid Table Name");
+                }
+            }
+            if(queryType == 2 && wordNumber == 4)
+            {
+                if(in.equalsIgnoreCase("WHERE"))
+                {
+                    // Handle where clause
+                }
+                else
+                    ;// Delete all records in table
+            }
         }
-        return ret;
         parser.close();
+        return ret;
+
     }
 }
