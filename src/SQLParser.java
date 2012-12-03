@@ -18,6 +18,8 @@ public class SQLParser
         SQLParser Parser = new SQLParser(testDB);
         String test = Parser.query("INSERT INTO courses VALUES (COP3504, Advanced Programming Fundamentals, Horton)");
         String test2 = Parser.query("INSERT INTO courses (course, name, instructor) VALUES (COP3505, Advanced Programming Fundamentals2, Hortona)");
+        String test3 = Parser.query("SELECT * FROM courses");
+        System.out.println(test3);
     }
 
     public String query(String query) {
@@ -59,16 +61,13 @@ public class SQLParser
                     queryType = 3;
                 }
                 else {
-                    throw new IllegalArgumentException("First word must be INSERT, SELECT, DELETE, or UPDATE");
+                    throw new IllegalArgumentException("Error: First word must be INSERT, SELECT, DELETE, or UPDATE");
                 }
             }
 
             if(queryType == 0 && wordNumber == 3) {
                 if(in.equalsIgnoreCase("courses") || in.equalsIgnoreCase("students") || in.equalsIgnoreCase("grades")) {
                     tableName = in;
-                }
-                else {
-                    throw new IllegalArgumentException("Invalid Table Name");
                 }
             }
 
@@ -84,10 +83,9 @@ public class SQLParser
                     while(subScanner.hasNext()) {
                         valueList.add(subScanner.next());
                     }
-                    System.out.println(tableName);
-                    System.out.println(valueList.toString());
                     DB.insert(tableName, valueList);
                     subScanner.close();
+                    ret = "Done.";
                 }
                 else {
                     String columns = "";
@@ -101,7 +99,6 @@ public class SQLParser
                     while(subScanner.hasNext()) {
                         columnList.add(subScanner.next());
                     }
-                    System.out.println(columnList.toString());
                     in = parser.next();
                     String values = "";
                     while(!(in.contains(")"))) {
@@ -116,6 +113,7 @@ public class SQLParser
                     }
                     DB.insert(tableName, columnList, valueList);
                     subScanner2.close();
+                    ret = "Done.";
                 }
             }
             if(queryType == 1 && wordNumber == 2) {
@@ -127,27 +125,23 @@ public class SQLParser
                     if(in.equalsIgnoreCase("courses") || in.equalsIgnoreCase("students") || in.equalsIgnoreCase("grades")) {
                         tableName = in;
                     }
-                    else {
-                        throw new IllegalArgumentException("Invalid Table Name");
-                    }
-
                     if (tableName.equalsIgnoreCase("courses")) {
                         for (String field : coursesFieldList) {
                             returnArr.add(DB.getField(tableName, field));
                         }
-                        System.out.print(outputFormatter(returnArr, coursesFieldList));
+                        ret = outputFormatter(returnArr, coursesFieldList);
                     }
                     if (tableName.equalsIgnoreCase("students")) {
                         for (String field : studentsFieldList) {
                             returnArr.add(DB.getField(tableName, field));
                         }
-                        System.out.print(outputFormatter(returnArr, studentsFieldList));
+                        ret = outputFormatter(returnArr, studentsFieldList);
                     }
                     if (tableName.equalsIgnoreCase("grades")) {
                         for (String field : gradesFieldList) {
                             returnArr.add(DB.getField(tableName, field));
                         }
-                        System.out.print(outputFormatter(returnArr, gradesFieldList));
+                        ret = outputFormatter(returnArr, gradesFieldList);
                     }
                 }
             }
@@ -156,15 +150,140 @@ public class SQLParser
                  if(in.equalsIgnoreCase("courses") || in.equalsIgnoreCase("students") || in.equalsIgnoreCase("grades")) {
                     tableName = in;
                 }
-                else {
-                    throw new IllegalArgumentException("Invalid Table Name");
-                }
             }
             if(queryType == 2 && wordNumber == 4)
             {
                 if(in.equalsIgnoreCase("WHERE"))
                 {
                     // Handle where clause
+                    ArrayList<String> conditions = new ArrayList<String>();
+                    while(parser.hasNext())
+                    {
+                        conditions.add(parser.next());
+                    }
+
+                    int conditionType; // 0 for OR 1 for AND
+
+                    if(conditions.get(1).equalsIgnoreCase("OR"))
+                    {
+                        conditionType = 0;
+                    }
+                    else
+                    {
+                        conditionType = 1;
+                    }
+                    ArrayList<Integer> removeList = new ArrayList<Integer>();
+                    if(conditionType == 0)
+                    {
+                        int i = 0;
+                        for(String s : conditions)
+                        {
+                            String[] pieces = s.split("=|<>|>=|<=|<|>");
+                            ArrayList<Object> list = DB.getField(tableName, pieces[1]);
+
+                            try
+                            {
+                                if(s.contains("=")) // =, <= or >=
+                                {
+                                    if(s.contains(">"))
+                                    {
+                                        if(Integer.parseInt(list.get(i).toString()) >= Integer.parseInt(pieces[2]))
+                                            removeList.add(i);
+                                    }
+                                    else if(s.contains("<"))
+                                    {
+                                        if(Integer.parseInt(list.get(i).toString()) <= Integer.parseInt(pieces[2]))
+                                            removeList.add(i);
+                                    }
+                                    else
+                                    {
+                                        if(list.get(i).toString() == pieces[2])
+                                            removeList.add(i);
+                                    }
+                                }
+                                else if(s.contains(">"))
+                                {
+                                    if(Integer.parseInt(list.get(i).toString()) > Integer.parseInt(pieces[2]))
+                                        removeList.add(i);
+                                }
+                                else if(s.contains("<"))
+                                {
+                                    if(Integer.parseInt(list.get(i).toString()) < Integer.parseInt(pieces[2]))
+                                        removeList.add(i);
+                                }
+                                else
+                                    throw new Exception("Invalid operator specified.");
+                            }
+                            catch(Exception e)
+                            {
+                                return "Binary comparisons (> and <) can only be done with integers";
+                            }
+
+                            i++;
+                        }
+                    }
+                    else
+                    {
+                        int i = 0;
+                        ArrayList<Object> temp = DB.getField(tableName, conditions.get(0).split("=|<>|>=|<=|<|>")[1]);
+                        int max = temp.size();
+                        int[] negate = new int[max];
+                        for(String s : conditions)
+                        {
+                            String[] pieces = s.split("=|<>|>=|<=|<|>");
+                            ArrayList<Object> list = DB.getField(tableName, pieces[1]);
+
+                            try
+                            {
+                                if(s.contains("=")) // =, <= or >=
+                                {
+                                    if(s.contains(">"))
+                                    {
+                                        if(Integer.parseInt(list.get(i).toString()) >= Integer.parseInt(pieces[2]))
+                                            negate[i] = 1;
+                                    }
+                                    else if(s.contains("<"))
+                                    {
+                                        if(Integer.parseInt(list.get(i).toString()) <= Integer.parseInt(pieces[2]))
+                                            negate[i] = 1;
+                                    }
+                                    else
+                                    {
+                                        if(list.get(i).toString() == pieces[2])
+                                            negate[i] = 1;
+                                    }
+                                }
+                                else if(s.contains(">"))
+                                {
+                                    if(Integer.parseInt(list.get(i).toString()) > Integer.parseInt(pieces[2]))
+                                        negate[i] = 1;
+                                }
+                                else if(s.contains("<"))
+                                {
+                                    if(Integer.parseInt(list.get(i).toString()) < Integer.parseInt(pieces[2]))
+                                        negate[i] = 1;
+                                }
+                                else
+                                    throw new Exception("Invalid operator specified.");
+                            }
+                            catch(Exception e)
+                            {
+                                return "Binary comparisons (> and <) can only be done with integers";
+                            }
+
+                            i++;
+                        }
+                        for(int x = 0; x < max; x++)
+                        {
+                            if(negate[x] != 1)
+                                removeList.add(x);
+                        }
+                    }
+
+                    for(Integer i : removeList)
+                    {
+                        DB.delete(tableName, i.intValue());
+                    }
                 }
                 else
                 {
@@ -178,6 +297,29 @@ public class SQLParser
     }
 
     public String outputFormatter(ArrayList<ArrayList<Object>> dataArr, ArrayList<String> fieldsArr) {
-        return "";
+        int tableLength = 0;
+        int tableHeight = 0;
+        String output = "";
+        for (String field : fieldsArr) {
+            tableLength += field.length() + 4;
+        }
+        for (int i = 0; i < tableLength; i++) {
+            output += "-";
+        }
+        output += "\n";
+        for (String field : fieldsArr) {
+            output += "| " + field + " |";
+        }
+        for (int i = 0; i < tableLength; i++) {
+            output += "-";
+        }
+        output += "\n";
+        tableHeight = dataArr.get(0).size();
+        for (int j = 0; j < fieldsArr.size(); j++) {
+            for (int i = 0; i < tableHeight; i++) {
+                output += "| " + dataArr.get(i).get(j) + " |";
+            }
+        }
+        return output;
     }
 }
