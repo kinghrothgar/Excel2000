@@ -1,5 +1,4 @@
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -34,6 +33,7 @@ public class CommandLineInterface
 	private Scanner input;
 	private User user;
 	private Database DB;
+	private SQLParser parser;
 	private String filepath;
 	
 	/**
@@ -111,12 +111,15 @@ public class CommandLineInterface
 		{
 		case 1:
 			directDataEntry();
+			mainMenu(true);
 			break;
 		case 2:
 			loadFile();
+			mainMenu(true);
 			break;
 		case 3:
 			saveFile(true);
+			mainMenu(true);
 			break;
 		case 4:
 			mainMenu(true);
@@ -179,27 +182,26 @@ public class CommandLineInterface
 	
 	private void makeSelection(boolean listHelp)
 	{
-		out.printf("Logged in as %s. Please make a selection.%n", user.name);
-		
 		int highestIdx = 0;
 		int basicInfoIdx = 0, modifyGradesIdx = 0, putStudentsIdx = 0, createCoursesIdx = 0, seeStudentGradesIdx = 0,
 				seeCourseGradesIdx = 0, rmStudentsIdx = 0, helpIdx = 0, logoutIdx = 0;
 		
 		// make list of options based on user permissions, associating each option with a number
 		ArrayList<String> options = new ArrayList<String>(0);
-		if (user.canSeeBasicCourseInfo()){			basicInfoIdx = ++highestIdx;		options.add("See basic course Info");}
-		if (user.canModifyGrades()){				modifyGradesIdx = ++highestIdx;		options.add("Modify grades");}
-		if (user.canPutStudentsInCourses()){		putStudentsIdx = ++highestIdx;		options.add("Put students in courses");}
-		if (user.canCreateCourses()){				createCoursesIdx = ++highestIdx;	options.add("Create courses");}
+		if (user.canSeeBasicCourseInfo()){			basicInfoIdx = ++highestIdx;		options.add("See basic course info");}
+		if (user.canModifyGrades()){				modifyGradesIdx = ++highestIdx;		options.add("Modify grade");}
+		if (user.canPutStudentsInCourses()){		putStudentsIdx = ++highestIdx;		options.add("Put student in course");}
+		if (user.canCreateCourses()){				createCoursesIdx = ++highestIdx;	options.add("Create course");}
 		if (user.canSeeAllGradesForOneStudent()){	seeStudentGradesIdx = ++highestIdx;	options.add("See student grades");}
 		if (user.canSeeAllGradesForOneCourse()){	seeCourseGradesIdx = ++highestIdx;	options.add("See course grades");}
-		if (user.canRemoveStudentFromCourse()){		rmStudentsIdx = ++highestIdx;		options.add("Remove students from courses");}
+		if (user.canRemoveStudentFromCourse()){		rmStudentsIdx = ++highestIdx;		options.add("Remove student from course");}
 		if (user.canGetHelp()){						helpIdx = ++highestIdx;				options.add("Help");}
 		if (user.canLogout()){						logoutIdx = ++highestIdx;			options.add("Logout");}
 		
 		String[] optionsArray = new String[options.size()];
 		for (int i = 0; i < options.size(); i++)
 			optionsArray[i] = options.get(i).toString();
+		out.printf("Logged in as %s. Please make a selection. (Type %s for help)%n", user.name, helpIdx);
 		if (listHelp) printOptions(optionsArray);
 		int choice = getChoice(options.size());
 		if (choice < 1)
@@ -208,31 +210,31 @@ public class CommandLineInterface
 			makeSelection(false);
 		}
 		else if (choice == basicInfoIdx) {
-			out.println("[GET BASIC INFO]");// TODO: Get basic info
+			getBasicInfo();
 			makeSelection(false);
 		}
 		else if (choice == modifyGradesIdx) {
-			out.println("[MODIFY GRADES]");// TODO: Modify grades
+			modifyGrade();
 			makeSelection(false);
 		}
 		else if (choice == putStudentsIdx) {
-			out.println("[PUT STUDENTS IN COURSES]");// TODO: Put students in courses
+			putStudentInCourse();
 			makeSelection(false);
 		}
 		else if (choice == createCoursesIdx) {
-			out.println("[CREATE COURSES]");// TODO: Create courses
+			createCourse();
 			makeSelection(false);
 		}
 		else if (choice == seeStudentGradesIdx) {
-			out.println("[SEE STUDENT GRADES]");// TODO: See student grades
+			seeStudentGrades();
 			makeSelection(false);
 		}
 		else if (choice == seeCourseGradesIdx) {
-			out.println("course grades");// TODO: See course grades
+			seeCourseGrades();
 			makeSelection(false);
 		}
 		else if (choice == rmStudentsIdx) {
-			out.println("rm students");// TODO: Remove students from courses
+			removeStudentFromCourse();
 			makeSelection(false);
 		}
 		else if (choice == helpIdx)
@@ -253,37 +255,145 @@ public class CommandLineInterface
 	private void directDataEntry()
 	{
 		DB = new Database();
+		parser = new SQLParser(DB);
 		String query;
 		do
 		{
 			query = prompt("Input SQL");
-			// TODO: pass query to parser
+			try
+			{
+				out.println(parser.query(query));
+			}catch (Exception e)
+			{
+				out.println(e.getMessage());
+			}
 		} while (!query.equals(""));
-		out.println("Manual sql");// TODO: delete this line
-		out.println("direct data entry");	// TODO: delete this line
-		mainMenu(true);
 	}
 	
 	private void getBasicInfo()
 	{
-		
+		String courseCode = prompt("Enter course code");
+		if (courseCode.equals(""))
+			return;
+		try
+		{
+			String query = String.format("SELECT * FROM courses WHERE course=%s", courseCode);
+			out.println(parser.query(query));
+		}catch (Exception e)
+		{
+			out.println(e.getMessage());
+		}
 	}
 	
-	private void select(String command)	// TODO
+	private void modifyGrade()
 	{
-		out.println("select");
+		String courseCode = prompt("Enter course code");
+		if (courseCode.equals(""))
+			return;
+		String studentID = prompt("Enter student ID");
+		if (studentID.equals(""))
+			return;
+		String grade = prompt("Enter new grade (0-100)");
+		if (grade.equals(""))
+			return;
+		try
+		{
+			String query = String.format("UPDATE grades SET grade=%s WHERE course=%s AND student=%s",
+					grade, courseCode, studentID);
+			out.println(parser.query(query));
+		}catch (Exception e)
+		{
+			out.println(e.getMessage());
+		}
 	}
-	private void update(String command) // TODO
+	
+	private void putStudentInCourse()
 	{
-		out.println("update");
+		String courseCode = prompt("Enter course code");
+		if (courseCode.equals(""))
+			return;
+		String studentID = prompt("Enter Student ID");
+		if (studentID.equals(""))
+			return;
+		try
+		{
+			String query = String.format("INSERT INTO grades (student, course, grade, isFinal) VALUES (%s, %s, %d, %s)",
+					studentID, courseCode, 0, "false");
+			out.println(parser.query(query));
+		}catch (Exception e)
+		{
+			out.println(e.getMessage());
+		}
 	}
-	private void delete(String command)	// TODO
+	
+	private void createCourse()
 	{
-		out.println("delete");
+		String courseCode = prompt("Enter course code");
+		if (courseCode.equals(""))
+			return;
+		String courseName = prompt("Enter course name");
+		if (courseName.equals(""))
+			return;
+		String courseInstructor = prompt("Enter course instructor");
+		if (courseInstructor.equals(""))
+			return;
+		try
+		{
+			String query = String.format("INSERT INTO courses (course, name, instructor) VALUES (%s, %s, %s)",
+					courseCode, courseName, courseInstructor);
+			out.println(parser.query(query));
+		}catch (Exception e)
+		{
+			out.println(e.getMessage());
+		}
 	}
-	private void insert(String command)	// TODO
+	
+	private void seeStudentGrades()
 	{
-		out.println("insert");
+		String studentName = prompt("Enter student name");
+		if (studentName.equals(""))
+			return;
+		try
+		{
+			String query = String.format("SELECT * FROM grades WHERE student=%s", studentName);
+			out.println(parser.query(query));
+		}catch (Exception e)
+		{
+			out.println(e.getMessage());
+		}
+	}
+	
+	private void seeCourseGrades()
+	{
+		String courseName = prompt("Enter course code");
+		if (courseName.equals(""))
+			return;
+		try
+		{
+			String query = String.format("SELECT * FROM grades WHERE course=%s", courseName);
+			out.println(parser.query(query));
+		}catch (Exception e)
+		{
+			out.println(e.getMessage());
+		}
+	}
+	
+	private void removeStudentFromCourse()
+	{
+		String courseCode = prompt("Enter course code");
+		if (courseCode.equals(""))
+			return;
+		String studentID = prompt("Enter Student ID");
+		if (studentID.equals(""))
+			return;
+		try
+		{
+			String query = String.format("DELETE FROM grades WHERE course=%s AND student=%s", courseCode, studentID);
+			out.println(parser.query(query));
+		}catch (Exception e)
+		{
+			out.println(e.getMessage());
+		}
 	}
 	
 	private void avg(String command)	// TODO
@@ -308,8 +418,9 @@ public class CommandLineInterface
     }
 
     private void loadFile() {
-        // TODO: instantiates DB from a file
-    	String inFilepath = prompt("Load from file:");
+        DB = new Database();// TODO: instantiates DB from a file
+        parser = new SQLParser(DB);
+    	String inFilepath = prompt("Load from file");
     	if (!inFilepath.endsWith(".xml"))
     		inFilepath += ".xml";
     	try
@@ -322,16 +433,12 @@ public class CommandLineInterface
     	{
     		out.println("Error: Invalid filepath");
     	}
-    	finally
-    	{
-    		mainMenu(true);
-    	}
         //DB = new Database(file);
         out.println("loaded file");
     }
 
     private void save() {
-    	String outFilepath = prompt("Save to file:");
+    	String outFilepath = prompt("Save to file");
     	if (!outFilepath.endsWith(".xml"))
     		outFilepath += ".xml";
 		try
@@ -344,10 +451,6 @@ public class CommandLineInterface
 		catch (IOException e)
 		{
 			out.println("Error: Invalid filepath");
-		}
-		finally
-		{
-			mainMenu(true);
 		}
     }
 	
@@ -369,7 +472,7 @@ public class CommandLineInterface
 	{
 		try
 		{
-			int choice = Integer.parseInt(prompt("Selection:"));
+			int choice = Integer.parseInt(prompt("Selection"));
 			if (choice < 1 || choice > numChoices)
 				throw new ArrayIndexOutOfBoundsException(choice);
 			return choice;
@@ -392,7 +495,7 @@ public class CommandLineInterface
 	
 	private String prompt(String message)
 	{
-		out.printf("%s ", message);
+		out.printf("%s: ", message);
 		String res = input.nextLine();
 		out.println();
 		return res;
