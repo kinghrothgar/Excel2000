@@ -19,6 +19,8 @@ public class SQLParser
         String test = Parser.query("INSERT INTO courses VALUES (COP3504, Advanced Programming Fundamentals, Horton)");
         String test2 = Parser.query("INSERT INTO courses (course, name, instructor) VALUES (COP3505, Advanced Programming Fundamentals2, Hortona)");
         String test3 = Parser.query("SELECT * FROM courses");
+        System.out.println(test);
+        System.out.println(test2);
         System.out.println(test3);
     }
 
@@ -317,7 +319,6 @@ public class SQLParser
         for (int i = 0; i < columnWidths.length; i++) {
         	if(columnWidths[i] < columnWidths2[i])
         		columnWidths[i] = columnWidths2[i];
-        	System.out.println(columnWidths[i]);
         }
         for (int i = 0; i < columnWidths.length; i++) {
         	tableLength += columnWidths[i];
