@@ -1,5 +1,6 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,6 +8,12 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
+
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.StartElement;
+import javax.xml.stream.events.XMLEvent;
 
 import database.Database;
 
@@ -63,30 +70,35 @@ public class CommandLineInterface
 		out.println("Main Menu");
 		/*
 		 * Options:
-		 * 1. Initialize database
-		 * 2. Login to role
-		 * 3. Exit
+		 * 1. Manual SQL commands
+		 * 2. Save/load database
+		 * 3. Login to role
+		 * 4. Exit
 		 */
 		// If DB already initialized, choice 1 should read "Close database"
-		String option1 = DB == null ? "Initialize database" : "Close database";
-		String[] options = {option1, "Login to role", "Exit"};
+		String option2 = DB == null ? "Save/load database" : "Close database";
+		String[] options = {"Manual SQL Commands", option2, "Login to role", "Exit"};
 		if (listHelp) printOptions(options);
 		switch(getChoice(options.length))
 		{
 		case 1:
+			directDataEntry();
+			mainMenu(true);
+			break;
+		case 2:
 			if (DB == null)
 				initializeDatabase(true);
 			else
 				closeDatabase(true);
 			break;
-		case 2:
+		case 3:
 			loginToRole(true);
 			break;
-		case 3:
+		case 4:
 			// Exit
 			if (DB != null)
 				closeDatabase(false);
-			closeScanner();
+			input.close();
 			out.println("Goodbye!");
 			break;
 		default:
@@ -96,36 +108,147 @@ public class CommandLineInterface
 	
 	private void initializeDatabase(boolean listHelp)
 	{
-		out.println("Initialize database");
+		out.println("Save/load database");
 		/*
 		 * Options:
-		 * 1. Direct Data Entry
-		 * 2. Load table from File
-		 * 3. Store table to File
-		 * 4. Back to main menu
+		 * 1. Load table from File
+		 * 2. Store table to File
+		 * 3. Back to main menu
 		 */
-		String[] options = {"Direct data entry", "Load table from file",
-				"Store table to file", "Go back to main menu"};
+		String[] options = {"Load table from file", "Store table to file", "Go back to main menu"};
 		if (listHelp) printOptions(options);
 		switch(getChoice(options.length))
 		{
 		case 1:
-			directDataEntry();
-			mainMenu(true);
-			break;
-		case 2:
 			loadFile();
 			mainMenu(true);
 			break;
-		case 3:
+		case 2:
 			saveFile(true);
 			mainMenu(true);
 			break;
-		case 4:
+		case 3:
 			mainMenu(true);
 			break;
 		default:
 			throw new ArrayIndexOutOfBoundsException();
+		}
+	}
+	
+	private void loadFile()
+	{
+		/*
+		 * Options:
+		 * 1. Load from CSV file
+		 * 2. Load from XML file
+		 * 3. Back
+		 */
+		String[] options = {"Import CSV file", "Import XML file", "Back"};
+		printOptions(options);
+		switch(getChoice(options.length))
+		{
+		case 1:
+			loadFileCSV();
+			mainMenu(true);
+			break;
+		case 2:
+			loadFileXML();
+			mainMenu(true);
+			break;
+		case 3:
+			return;
+		default:
+			throw new ArrayIndexOutOfBoundsException();
+		}
+	}
+	
+	private void loadFileCSV() // TODO
+	{
+		/*
+		 * Options:
+		 * 1. Students table
+		 * 2. Courses table
+		 * 3. Grades table
+		 * 4. Back
+		 */
+		String[] options = {"Import student table", "Import course table", "Import grade table", "Back"};
+		printOptions(options);
+		String tableName = "";
+		switch(getChoice(options.length))
+		{
+		case 1:
+			tableName = "students";
+			break;
+		case 2:
+			tableName = "courses";
+			break;
+		case 3:
+			tableName = "grades";
+			break;
+		case 4:
+			return;
+		default:
+			throw new ArrayIndexOutOfBoundsException();
+		}
+		try
+		{
+			String filepath = prompt("Enter filepath");
+			Scanner inScanner = new Scanner(new File(filepath));
+			while(inScanner.hasNextLine())
+			{
+				String values = inScanner.nextLine();
+				String query = String.format("INSERT INTO %s VALUES (%s)",
+						tableName, values);
+				try
+				{
+					parser.query(query);
+				}catch (Exception e)
+				{
+					out.println(e.getMessage());
+				}
+			}
+			inScanner.close();
+		}
+		catch (FileNotFoundException e)
+		{
+			out.println("File not found.");
+		}
+		catch (Exception e)
+		{
+			out.println(e.getMessage());
+		}
+	}
+	
+	private void loadFileXML()
+	{
+		Database oldDatabase = DB;
+		DB = new Database();
+		parser = new SQLParser(DB);
+		String inFilepath = prompt("Load from file");
+		if (inFilepath.equals(""))
+			return;
+		if (!inFilepath.endsWith(".xml"))
+			inFilepath += ".xml";
+		try
+		{
+			xmlToDatabase(inFilepath);
+			out.println("Table loaded.");
+		}
+		catch (IOException e)
+		{
+			if(e instanceof FileNotFoundException)
+				out.println("Error: File not found");
+			else
+				out.println("Error: File not valid");
+			DB = oldDatabase;
+		}
+		catch (XMLStreamException e)
+		{
+			out.println("XML error");
+		}
+		catch (Exception e)
+		{
+			out.println(e.getMessage());
 		}
 	}
 	
@@ -138,9 +261,8 @@ public class CommandLineInterface
 	
 	private void closeDatabase(boolean backToMain)
 	{
-		out.println("closing DB");
 		// TODO: Only prompt if changes were made
-		if (prompt("Save changes? (Y/N)").equalsIgnoreCase("Y"))
+		if (prompt("Save table? (Y/N)").equalsIgnoreCase("Y"))
 			saveFile(false);
 		DB = null;
 		if (backToMain) mainMenu(true);
@@ -254,7 +376,7 @@ public class CommandLineInterface
 	
 	private void directDataEntry()
 	{
-		DB = new Database();
+		if (DB == null) DB = new Database();
 		parser = new SQLParser(DB);
 		String query;
 		do
@@ -410,6 +532,7 @@ public class CommandLineInterface
 		out.println("sum");
 	}
 	private void count(String command){	// TODO
+		
 		out.println("count");
 	}
 
@@ -417,26 +540,137 @@ public class CommandLineInterface
         makeSelection(true);// queries current user information and prints permissions
     }
 
-    private void loadFile() {
-        DB = new Database();// TODO: instantiates DB from a file
-        parser = new SQLParser(DB);
-    	String inFilepath = prompt("Load from file");
-    	if (!inFilepath.endsWith(".xml"))
-    		inFilepath += ".xml";
-    	try
+	
+	
+    private void xmlToDatabase(String filepath) throws Exception
+    {
+    	XMLInputFactory inFactory = XMLInputFactory.newInstance();
+    	InputStream inStream = new FileInputStream(filepath);
+    	XMLEventReader eventReader = inFactory.createXMLEventReader(inStream);
+    	while (eventReader.hasNext())
     	{
-    		BufferedReader loadIn = new BufferedReader(new FileReader(inFilepath));
-    		// TODO: read table
-    		loadIn.close();
+	    	XMLEvent event = eventReader.nextEvent();
+	    	if (event.isStartElement())
+	    	{
+	    		StartElement startElement = event.asStartElement();
+	    		if (startElement.getName().getLocalPart().equals("StudentTable"))
+	    		{
+	    			xmlStudentTable(eventReader);
+	    			break;
+	    		}
+	    		else if (startElement.getName().getLocalPart().equals("CourseTable"))
+	    		{
+	    			xmlCourseTable(eventReader);
+	    			break;
+	    		}
+	    		else if (startElement.getName().getLocalPart().equals("GradeTable"))
+	    		{
+	    			xmlGradeTable(eventReader);
+	    			break;
+	    		}
+	    	}
     	}
-    	catch (IOException e)
-    	{
-    		out.println("Error: Invalid filepath");
-    	}
-        //DB = new Database(file);
-        out.println("loaded file");
     }
-
+    
+    private void xmlStudentTable(XMLEventReader eventReader) throws Exception
+    {
+    	String id = "", first = "", last = "", age = "", year = ""; 
+    	while(eventReader.hasNext())
+    	{
+    		XMLEvent event = eventReader.nextEvent();
+    		if (event.isStartElement())
+    		{
+    			StartElement startElement = event.asStartElement();
+    			//if (startElement.getName().getLocalPart().equals("student"));	// new student record
+    			if (startElement.getName().getLocalPart().equalsIgnoreCase("id"))
+    			{
+    				event = eventReader.nextEvent();
+    				id = event.asCharacters().getData();
+    			}
+    			else if (startElement.getName().getLocalPart().equalsIgnoreCase("first"))
+    			{
+    				event = eventReader.nextEvent();
+    				first = event.asCharacters().getData();
+    			}
+    			else if (startElement.getName().getLocalPart().equalsIgnoreCase("last"))
+    			{
+    				event = eventReader.nextEvent();
+    				last = event.asCharacters().getData();
+    			}
+    			else if (startElement.getName().getLocalPart().equalsIgnoreCase("age"))
+    			{
+    				event = eventReader.nextEvent();
+    				age = event.asCharacters().getData();
+    			}
+    			else if (startElement.getName().getLocalPart().equalsIgnoreCase("year"))
+    			{
+    				event = eventReader.nextEvent();
+    				year = event.asCharacters().getData();
+    			}
+    		}
+    		
+    		// reach end of a record
+    		if (event.isEndElement())
+    			if (event.asEndElement().getName().getLocalPart() == ("student")) {
+					String query = String.format("INSERT INTO students VALUES (%s, %s, %s, %s, %s)",
+							id, first, last, age, year);
+					parser.query(query);
+				}
+    	}
+    }
+    
+    private void xmlCourseTable(XMLEventReader eventReader) throws Exception
+    {
+    	String id = "", first = "", last = "", age = "", year = ""; 
+    	while(eventReader.hasNext())
+    	{
+    		XMLEvent event = eventReader.nextEvent();
+    		if (event.isStartElement())
+    		{
+    			StartElement startElement = event.asStartElement();
+    			//if (startElement.getName().getLocalPart().equals("student"));	// new student record
+    			if (startElement.getName().getLocalPart().equalsIgnoreCase("id"))
+    			{
+    				event = eventReader.nextEvent();
+    				id = event.asCharacters().getData();
+    			}
+    			else if (startElement.getName().getLocalPart().equalsIgnoreCase("first"))
+    			{
+    				event = eventReader.nextEvent();
+    				first = event.asCharacters().getData();
+    			}
+    			else if (startElement.getName().getLocalPart().equalsIgnoreCase("last"))
+    			{
+    				event = eventReader.nextEvent();
+    				last = event.asCharacters().getData();
+    			}
+    			else if (startElement.getName().getLocalPart().equalsIgnoreCase("age"))
+    			{
+    				event = eventReader.nextEvent();
+    				age = event.asCharacters().getData();
+    			}
+    			else if (startElement.getName().getLocalPart().equalsIgnoreCase("year"))
+    			{
+    				event = eventReader.nextEvent();
+    				year = event.asCharacters().getData();
+    			}
+    		}
+    		
+    		// reach end of a record
+    		if (event.isEndElement())
+    			if (event.asEndElement().getName().getLocalPart() == ("student")) {
+					String query = String.format("INSERT INTO students VALUES (%s, %s, %s, %s, %s)",
+							id, first, last, age, year);
+					parser.query(query);
+				}
+    	}
+    }
+    
+    private void xmlGradeTable(XMLEventReader eventReader)
+    {
+    	out.println("grade crap");	// TODO: delete line
+    }
+    
     private void save() {
     	String outFilepath = prompt("Save to file");
     	if (!outFilepath.endsWith(".xml"))
@@ -461,11 +695,6 @@ public class CommandLineInterface
 	private void initializeScanner()
 	{
 		input = new Scanner(in);
-	}
-	
-	private void closeScanner()
-	{
-		input.close();
 	}
 	
 	private int getChoice(int numChoices)
