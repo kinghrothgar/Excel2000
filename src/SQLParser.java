@@ -1,4 +1,3 @@
-import java.util.Arrays;
 import java.util.Scanner;
 import database.Database;
 import java.util.ArrayList;
@@ -302,8 +301,6 @@ public class SQLParser
         int[] columnWidths = new int[fieldsArr.size()];
         int[] columnWidths2 = new int[fieldsArr.size()];
     	int tableLength = 0;
-        int tableLength2 = 0;
-        int tableHeight = 0;
         String output = "";
         for (int i = 0; i < fieldsArr.size(); i++) {
             columnWidths[i] = fieldsArr.get(i).length();
