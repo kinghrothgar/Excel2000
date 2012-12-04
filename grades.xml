@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<GradeTable>
+	<grades>
+		<student>1</student>
+		<course>COP3504</course>
+		<grade>74.5</grade>
+		<isFinal>false</isFinal>
+	</grades>
+	<grades>
+		<student>2</student>
+		<course>EEL3701C</course>
+		<grade>88.3</grade>
+		<isFinal>true</isFinal>
+	</grades>
+</GradeTable>

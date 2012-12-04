@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<StudentTable>
+	<student>
+		<id>1</id>
+		<first>John</first>
+		<last>Lastnameson</last>
+		<age>27</age>
+		<year>2</year>
+	</student>
+	<student>
+		<id>2</id>
+		<first>Bob</first>
+		<last>Surnamesmith</last>
+		<age>18</age>
+		<year>7</year>
+	</student>
+</StudentTable>

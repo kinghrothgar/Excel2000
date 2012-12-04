@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CourseTable>
+	<class>
+		<course>COP3504</course>
+		<name>Advanced Programming Fundamentals</name>
+		<instructor>Horton</instructor>
+	</class>
+	<class>
+		<course>EEL3701C</course>
+		<name>Digital Logic</name>
+		<instructor>Schwartz</instructor>
+	</class>
+</CourseTable>
