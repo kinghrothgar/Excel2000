@@ -176,6 +176,7 @@ public class SQLParser
                         while(parser.hasNext()) {
                         	in = parser.next();
                         	if(in.equalsIgnoreCase("JOIN")) {
+								JWO = true;
                         		in = parser.next();
                                 inputTables.add(in);
                         		in = parser.next();
@@ -200,11 +201,55 @@ public class SQLParser
                         			throw new IllegalArgumentException("Syntax Error, make sure your join statement is correctly formed");
                         		}
                         		// TODO finish up creating joined list
+								
+								int index = 0;
+                        		for (String table : inputTables) {
+                        			joinedList.add(DB.getField(table, joinFields.get(index++)));
+                        		}
+                            	int[][] indexList = new int[2][joinedList.get(1).size() + joinedList.get(0).size()];
+                        		for (int j = 0; j < joinedList.size(); j++) {
+                        			for (int i = 0; i < joinedList.get(0).size(); i++) {
+                        				for (int k = 0; k < joinedList.get(1).size(); k++) {
+                        					if (joinedList.get(0).get(i).toString().equals(joinedList.get(1).get(k).toString())) {
+                        						 indexList[0][i] = 1;
+                        						 indexList[1][k] = 1;
+                        					}
+                        				}
+                        			}
+                        		}
+
+                                if (inputTables.get(0).equalsIgnoreCase("courses")) {
+                                    for (int j = 0; j < coursesFieldList.size(); j++) {
+                                        returnArr.add(DB.getField(inputTables.get(0), coursesFieldList.get(j)));
+                                    }
+                                }
+                                if (inputTables.get(0).equalsIgnoreCase("students")) {
+                                    for (int j = 0; j < studentsFieldList.size(); j++) {
+                                        returnArr.add(DB.getField(inputTables.get(0), studentsFieldList.get(j)));
+                                    }
+                                }
+                                if (inputTables.get(0).equalsIgnoreCase("grades")) {
+                                    for (int j = 0; j < gradesFieldList.size(); j++) {
+                                        returnArr.add(DB.getField(inputTables.get(0), gradesFieldList.get(j)));
+                                    }
+                                }
+                        		for (int k = 0; k < 2; k++) {
+                        			for (int i = 0; i < returnArr.size(); i++) {
+                        				for (int j = 0; j < returnArr.get(i).size(); j++) {
+                        					if (indexList[k][j] != 1) {
+                        						returnArr.get(i).remove(j);
+                        					}
+                        				}
+                        			}
+                        		}
+								
                         	}
                         	if(in.equalsIgnoreCase("WHERE")) {
+								JWO = true;
                         		// TODO Handle WHERE
                         	}
                         	if(in.equalsIgnoreCase("ORDER")) {
+								JWO = true;
                         		// TODO Handle ORDER
                         	}
                         }
@@ -216,6 +261,7 @@ public class SQLParser
                         	ret = outputFormatter(returnArr, inputFields);
                         }
                         else {
+							ret = outputFormatter(returnArr, inputFields);
                         	// TODO Handle cases where there is JOIN, WHERE, ORDER
                         }
                         
@@ -228,6 +274,7 @@ public class SQLParser
                         while(parser.hasNext()) {
                         	in = parser.next();
                         	if(in.equalsIgnoreCase("JOIN")) {
+								JWO = true;
                         		in = parser.next();
                                 inputTables.add(in);
                         		in = parser.next();
@@ -241,6 +288,7 @@ public class SQLParser
                         		else {
                         			throw new IllegalArgumentException("Syntax Error, make sure your join statement is correctly formed");
                         		}
+								in = parser.next(); // it's on the = here
                         		in = parser.next();
                         		if(in.contains(inputTables.get(0))) {
                         			joinFields.add(0, in.split("\\.")[1]);
@@ -252,11 +300,55 @@ public class SQLParser
                         			throw new IllegalArgumentException("Syntax Error, make sure your join statement is correctly formed");
                         		}
                         		// TODO finish up creating joined list
+								
+								int index = 0;
+                        		for (String table : inputTables) {
+                        			joinedList.add(DB.getField(table, joinFields.get(index++)));
+                        		}
+                            	int[][] indexList = new int[2][joinedList.get(1).size() + joinedList.get(0).size()];
+                        		for (int j = 0; j < joinedList.size(); j++) {
+                        			for (int i = 0; i < joinedList.get(0).size(); i++) {
+                        				for (int k = 0; k < joinedList.get(1).size(); k++) {
+                        					if (joinedList.get(0).get(i).toString().equals(joinedList.get(1).get(k).toString())) {
+                        						 indexList[0][i] = 1;
+                        						 indexList[1][k] = 1;
+                        					}
+                        				}
+                        			}
+                        		}
+
+                                if (inputTables.get(0).equalsIgnoreCase("courses")) {
+                                    for (int j = 0; j < coursesFieldList.size(); j++) {
+                                        returnArr.add(DB.getField(inputTables.get(0), coursesFieldList.get(j)));
+                                    }
+                                }
+                                if (inputTables.get(0).equalsIgnoreCase("students")) {
+                                    for (int j = 0; j < studentsFieldList.size(); j++) {
+                                        returnArr.add(DB.getField(inputTables.get(0), studentsFieldList.get(j)));
+                                    }
+                                }
+                                if (inputTables.get(0).equalsIgnoreCase("grades")) {
+                                    for (int j = 0; j < gradesFieldList.size(); j++) {
+                                        returnArr.add(DB.getField(inputTables.get(0), gradesFieldList.get(j)));
+                                    }
+                                }
+
+                        		for (int k = 0; k < 2; k++) {
+                        			for (int i = 0; i < returnArr.size(); i++) {
+                        				for (int j = 0; j < returnArr.get(i).size(); j++) {
+                        					if (indexList[k][j] != 1) {
+                        						returnArr.get(i).remove(j);
+                        					}
+                        				}
+                        			}
+                        		}
                         	}
                         	if(in.equalsIgnoreCase("WHERE")) {
+								JWO = true;
                         		// TODO Handle WHERE
                         	}
                         	if(in.equalsIgnoreCase("ORDER")) {
+								JWO = true;
                         		// TODO Handle ORDER
                         	}
                         }
@@ -268,6 +360,7 @@ public class SQLParser
                         	ret = outputFormatter(returnArr, inputFields);
                         }
                         else {
+							ret = outputFormatter(returnArr, inputFields);
                         	// TODO Handle cases where there is JOIN, WHERE, ORDER
                         }
                         
