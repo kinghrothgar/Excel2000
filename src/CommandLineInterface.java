@@ -1,3 +1,4 @@
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -5,7 +6,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -41,7 +41,6 @@ public class CommandLineInterface
 	private User user;
 	private Database DB;
 	private SQLParser parser;
-	private String filepath;
 	
 	/**
 	 * Establish an interface using I/O streams.
@@ -72,37 +71,53 @@ public class CommandLineInterface
 		out.println("\nMain Menu");
 		/*
 		 * Options:
-		 * 1. Manual SQL commands
-		 * 2. Load table
-		 * 3. Save tables
-		 * 4. Login to role
-		 * 5. Exit
+		 * 1. Initialize Database
+		 * 2. Login to role
+		 * 3. Exit
 		 */
-		String[] options = {"Manual SQL Commands", "Load table", "Save tables", "Login to role", "Exit"};
+		String[] options = {"Initialize Database", "Login to role", "Exit"};
 		if (listHelp) printOptions(options);
 		switch(getChoice(options.length))
 		{
 		case 1:
-			directDataEntry();
+			initializeDatabase();
 			mainMenu(true);
 			break;
 		case 2:
-			loadFile();
-			mainMenu(true);
-			break;
-		case 3:
-			saveFile(true);
-			mainMenu(true);
-			break;
-		case 4:
 			loginToRole(true);
 			break;
-		case 5:
+		case 3:
 			// Exit
 			if (DB != null)
 				closeDatabase();
 			//input.close();
 			out.println("Goodbye!");
+			break;
+		default:
+			throw new ArrayIndexOutOfBoundsException();
+		}
+	}
+	
+	private void initializeDatabase()
+	{
+		/*
+		 * Options:
+		 * 1. Direct data entry
+		 * 2. Load table from file
+		 * 3. Save table to file
+		 */
+		String[] options = {"Direct data entry", "Load table from file", "Save table to CSV file"};
+		printOptions(options);
+		switch(getChoice(options.length))
+		{
+		case 1:
+			directDataEntry();
+			break;
+		case 2:
+			loadFile();
+			break;
+		case 3:
+			saveFile();
 			break;
 		default:
 			throw new ArrayIndexOutOfBoundsException();
@@ -226,18 +241,98 @@ public class CommandLineInterface
 		}
 	}
 	
-	private void saveFile(boolean backToMain)
+	private void saveFile()
 	{
-		out.println("Saving to " + filepath);
-		save();
-		if (backToMain) mainMenu(true);
+		/*
+		 * Options:
+		 * 1. Save students table
+		 * 2. Save courses table
+		 * 3. Save grades table
+		 * 4. Exit 
+		 */
+		String[] options = {"Save students table", "Save courses table", "Save grades table"};
+		printOptions(options);
+		switch(getChoice(options.length))
+		{
+			case 1:
+				save("students");
+				break;
+			case 2:
+				save("courses");
+				break;
+			case 3:
+				save("grades");
+				break;
+			case 4:
+				return;
+			default:
+				throw new ArrayIndexOutOfBoundsException();
+		}
+	}
+	
+	private void save(String tablename)
+	{
+		String outFilepath = prompt("Save to file");
+		if (!outFilepath.endsWith(".csv"))
+			outFilepath += ".csv";
+		try
+		{
+			String query = String.format("SELECT * FROM %s", tablename);
+			String tableString = parser.query(query);
+			BufferedWriter saveOut = new BufferedWriter(new FileWriter(outFilepath));
+			ArrayList<ArrayList<String>> table = asciiTableToArrayList(tableString);
+			for (ArrayList<String> row : table)
+			{
+				String rowString = "";
+				for (int i = 0; i < row.size()-1; i++)
+					rowString += row.get(i) + ",";
+				rowString += row.get(row.size()-1);
+				saveOut.write(rowString);
+				saveOut.newLine();
+			}
+			saveOut.close();
+			out.println("File saved.");
+		}
+		catch (Exception e)
+		{
+			out.println(e.getMessage());
+		}
+	}
+	
+	private ArrayList<ArrayList<String>> asciiTableToArrayList(String ascii)
+	{
+		Scanner scanner = new Scanner(ascii);
+		ArrayList<ArrayList<String>> ret = new ArrayList<ArrayList<String>>();
+		scanner.nextLine();
+		scanner.nextLine();
+		scanner.nextLine();	// Advance scanner to first row of data
+		while(scanner.hasNextLine())
+		{
+			ArrayList<String> lineArrayList = new ArrayList<String>();
+			String line = scanner.nextLine();
+			if (!line.startsWith("|"))
+				continue;
+			while (line.length() > 1)
+			{
+				if (line.indexOf("|") >= line.length()-2)
+					break;
+				String cell = line = line.substring(line.indexOf("|") + 2);
+				int idx = cell.indexOf("|");
+				if (idx < 0)
+					continue;
+				cell = cell.substring(0, cell.indexOf("|")).trim();
+				lineArrayList.add(cell);
+			}
+			ret.add(lineArrayList);
+		}
+		scanner.close();
+		return ret;
 	}
 	
 	private void closeDatabase()
 	{
-		// TODO: Only prompt if changes were made
-		if (prompt("Save table? (Y/N)").equalsIgnoreCase("Y"))
-			saveFile(false);
+		if (prompt("Save tables? (Y/N)").equalsIgnoreCase("Y"))
+			saveFile();
 	}
 	
 	private void loginToRole(boolean listHelp)
@@ -447,12 +542,12 @@ public class CommandLineInterface
 	
 	private void seeStudentGrades()
 	{
-		String studentName = prompt("Enter student name");
-		if (studentName.equals(""))
+		String studentID = prompt("Enter student ID");
+		if (studentID.equals(""))
 			return;
 		try
 		{
-			String query = String.format("SELECT * FROM grades WHERE student=%s", studentName);
+			String query = String.format("SELECT * FROM grades WHERE student=%s", studentID);
 			out.println(parser.query(query));
 		}catch (Exception e)
 		{
@@ -492,30 +587,10 @@ public class CommandLineInterface
 			out.println(e.getMessage());
 		}
 	}
-	
-	private void avg(String command)	// TODO
-	{
-		out.println("avg");
-	}
-	private void max(String command){	// TODO
-		out.println("max");
-	}
-	private void min(String command){	// TODO
-		out.println("min");
-	}
-	private void sum(String command){	// TODO
-		out.println("sum");
-	}
-	private void count(String command){	// TODO
-		
-		out.println("count");
-	}
 
     private void help() {
         makeSelection(true);// queries current user information and prints permissions
     }
-
-	
 	
     private void xmlToDatabase(String filepath) throws Exception
     {
@@ -556,32 +631,16 @@ public class CommandLineInterface
     		if (event.isStartElement())
     		{
     			StartElement startElement = event.asStartElement();
-    			//if (startElement.getName().getLocalPart().equals("student"));	// new student record
     			if (startElement.getName().getLocalPart().equalsIgnoreCase("id"))
-    			{
-    				event = eventReader.nextEvent();
-    				id = event.asCharacters().getData();
-    			}
+    				id = eventReader.nextEvent().asCharacters().getData();
     			else if (startElement.getName().getLocalPart().equalsIgnoreCase("first"))
-    			{
-    				event = eventReader.nextEvent();
-    				first = event.asCharacters().getData();
-    			}
+    				first = eventReader.nextEvent().asCharacters().getData();
     			else if (startElement.getName().getLocalPart().equalsIgnoreCase("last"))
-    			{
-    				event = eventReader.nextEvent();
-    				last = event.asCharacters().getData();
-    			}
+    				last = eventReader.nextEvent().asCharacters().getData();
     			else if (startElement.getName().getLocalPart().equalsIgnoreCase("age"))
-    			{
-    				event = eventReader.nextEvent();
-    				age = event.asCharacters().getData();
-    			}
+    				age = eventReader.nextEvent().asCharacters().getData();
     			else if (startElement.getName().getLocalPart().equalsIgnoreCase("year"))
-    			{
-    				event = eventReader.nextEvent();
-    				year = event.asCharacters().getData();
-    			}
+    				year = eventReader.nextEvent().asCharacters().getData();
     		}
     		
     		// reach end of a record
@@ -596,72 +655,61 @@ public class CommandLineInterface
     
     private void xmlCourseTable(XMLEventReader eventReader) throws Exception
     {
-    	String id = "", first = "", last = "", age = "", year = ""; 
+    	String id = "", name = "", instructor = ""; 
     	while(eventReader.hasNext())
     	{
     		XMLEvent event = eventReader.nextEvent();
     		if (event.isStartElement())
     		{
     			StartElement startElement = event.asStartElement();
-    			//if (startElement.getName().getLocalPart().equals("student"));	// new student record
-    			if (startElement.getName().getLocalPart().equalsIgnoreCase("id"))
-    			{
-    				event = eventReader.nextEvent();
-    				id = event.asCharacters().getData();
-    			}
-    			else if (startElement.getName().getLocalPart().equalsIgnoreCase("first"))
-    			{
-    				event = eventReader.nextEvent();
-    				first = event.asCharacters().getData();
-    			}
-    			else if (startElement.getName().getLocalPart().equalsIgnoreCase("last"))
-    			{
-    				event = eventReader.nextEvent();
-    				last = event.asCharacters().getData();
-    			}
-    			else if (startElement.getName().getLocalPart().equalsIgnoreCase("age"))
-    			{
-    				event = eventReader.nextEvent();
-    				age = event.asCharacters().getData();
-    			}
-    			else if (startElement.getName().getLocalPart().equalsIgnoreCase("year"))
-    			{
-    				event = eventReader.nextEvent();
-    				year = event.asCharacters().getData();
-    			}
+    			if (startElement.getName().getLocalPart().equalsIgnoreCase("course"))
+    				id = eventReader.nextEvent().asCharacters().getData();
+    			else if (startElement.getName().getLocalPart().equalsIgnoreCase("name"))
+    				name = eventReader.nextEvent().asCharacters().getData();
+    			else if (startElement.getName().getLocalPart().equalsIgnoreCase("instructor"))
+    				instructor = eventReader.nextEvent().asCharacters().getData();
     		}
     		
     		// reach end of a record
     		if (event.isEndElement())
-    			if (event.asEndElement().getName().getLocalPart() == ("student")) {
-					String query = String.format("INSERT INTO students VALUES (%s, %s, %s, %s, %s)",
-							id, first, last, age, year);
+    			if (event.asEndElement().getName().getLocalPart() == ("class")) {
+					String query = String.format("INSERT INTO courses VALUES (%s, %s, %s)",
+							id, name, instructor);
 					parser.query(query);
 				}
     	}
     }
     
-    private void xmlGradeTable(XMLEventReader eventReader)
+    private void xmlGradeTable(XMLEventReader eventReader) throws Exception
     {
-    	out.println("grade crap");	// TODO: delete line
+    	String student = "", course = "", grade = "", isFinal = "";
+    	while(eventReader.hasNext())
+    	{
+    		XMLEvent event = eventReader.nextEvent();
+    		if (event.isStartElement())
+    		{
+    			StartElement startElement = event.asStartElement();
+    			if (startElement.getName().getLocalPart().equalsIgnoreCase("student"))
+    				student = eventReader.nextEvent().asCharacters().getData();
+    			else if (startElement.getName().getLocalPart().equalsIgnoreCase("class"))
+    				course = eventReader.nextEvent().asCharacters().getData();
+    			else if (startElement.getName().getLocalPart().equalsIgnoreCase("grades"))
+    				grade = eventReader.nextEvent().asCharacters().getData();
+    			else if (startElement.getName().getLocalPart().equalsIgnoreCase("isFinal"))
+    				isFinal = eventReader.nextEvent().asCharacters().getData();
+    		}
+    		
+    		// reach end of a record
+    		if (event.isEndElement())
+	    		if (event.asEndElement().getName().getLocalPart() == ("grades")) {
+					String query = String.format("INSERT INTO grades VALUES (%s, %s, %s, %s)",
+							student, course, grade, isFinal);
+					parser.query(query);
+				}
+    	}
     }
     
-    private void save() {
-    	String outFilepath = prompt("Save to file");
-    	if (!outFilepath.endsWith(".xml"))
-    		outFilepath += ".xml";
-		try
-		{
-			PrintWriter saveOut = new PrintWriter(new FileWriter(outFilepath));
-			// TODO: write table
-	    	out.println("saved file");
-	    	saveOut.close();
-		}
-		catch (IOException e)
-		{
-			out.println("Error: Invalid filepath");
-		}
-    }
+   
 	
 	/*
 	 * Internal Methods
