@@ -207,7 +207,15 @@ public class SQLParser
                         	}
                         }
                         
-                        // TODO Handle returnArr creation considering multiple fields
+                        if(!JWO) {
+                        	for (String field : inputFields) {
+                        		returnArr.add(DB.getField(inputTables.get(0), field));
+                        	}
+                        	ret = outputFormatter(returnArr, inputFields);
+                        }
+                        else {
+                        	// TODO Handle cases where there is JOIN, WHERE, ORDER
+                        }
                         
                 	}
                     else {
