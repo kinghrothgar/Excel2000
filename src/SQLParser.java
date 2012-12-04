@@ -1,6 +1,8 @@
 import java.util.Scanner;
 import database.Database;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class SQLParser
 {
@@ -17,10 +19,10 @@ public class SQLParser
         SQLParser Parser = new SQLParser(testDB);
         System.out.println(Parser.query("INSERT INTO courses VALUES (COP3504, Advanced Programming Fundamentals, Horton)"));
         System.out.println(Parser.query("INSERT INTO courses (course, name, instructor) VALUES (COP3505, Advanced Programming Fundamentals2, Hortona)"));
-        System.out.println(Parser.query("SELECT * FROM courses"));
-        System.out.println(Parser.query("SELECT course FROM courses"));
-        System.out.println(Parser.query("SELECT course, name FROM courses"));
-        System.out.println(Parser.query("DELETE FROM courses"));
+        //System.out.println(Parser.query("SELECT * FROM courses"));
+        //System.out.println(Parser.query("SELECT course FROM courses"));
+        //System.out.println(Parser.query("SELECT course, name FROM courses"));
+        System.out.println(Parser.query("DELETE FROM courses WHERE course='COP3505' AND instructor='Hortona'"));
         System.out.println(Parser.query("SELECT * FROM courses"));
     }
 
@@ -36,16 +38,16 @@ public class SQLParser
         // this holds the name of the table, can be either courses, students, or grades
         String tableName = "";
         // ArrayList of Strings to hold the list of values provided in the query
-        ArrayList<String> valueList = new ArrayList<String>();
+        ArrayList<String> valueList = new ArrayList<>();
         // ArrayList of Strings to hold the list of columns provided in the query
-        ArrayList<String> columnList = new ArrayList<String>();
+        ArrayList<String> columnList = new ArrayList<>();
         // ArrayList of Strings that holds the list of all fields for the courses table, then students, then grades
         ArrayList<String> coursesFieldList = DB.getFieldList("courses");
         ArrayList<String> studentsFieldList = DB.getFieldList("students");
         ArrayList<String> gradesFieldList = DB.getFieldList("grades");
         Scanner parser = new Scanner(query);
         String ret = "";
-        String in = "";
+        String in;
         while(parser.hasNext()) {
             in = parser.next();
             ++wordNumber;
@@ -123,7 +125,7 @@ public class SQLParser
                 }
             }
             if(queryType == 1 && wordNumber == 2) {
-                ArrayList<ArrayList<Object>> returnArr = new ArrayList<ArrayList<Object>>();
+                ArrayList<ArrayList<Object>> returnArr = new ArrayList<>();
                 if(in.equals("*")) {
                     ++wordNumber;
                     ++wordNumber;
@@ -152,10 +154,10 @@ public class SQLParser
                     }
                 }
                 else {
-                	ArrayList<String> inputTables = new ArrayList<String>();
-                	ArrayList<String> inputFields = new ArrayList<String>();
-                	ArrayList<ArrayList<Object>> joinedList = new ArrayList<ArrayList<Object>>(); // this list is for holding the final joined list as a result of a JOIN command
-                	ArrayList<String> joinFields = new ArrayList<String>();
+                	ArrayList<String> inputTables = new ArrayList<>();
+                	ArrayList<String> inputFields = new ArrayList<>();
+                	ArrayList<ArrayList<Object>> joinedList = new ArrayList<>(); // this list is for holding the final joined list as a result of a JOIN command
+                	ArrayList<String> joinFields = new ArrayList<>();
                 	boolean JWO = false; // does this statement include a JOIN, WHERE, or ORDER clause
                 	if(in.contains(",")) {
                         String inField = "";
@@ -272,27 +274,31 @@ public class SQLParser
                     }
                 }
             }
-            if(queryType == 2 && wordNumber == 3)
+            /// START DELETE BLOCK ///
+            if(queryType == 2 && wordNumber == 3) // Sets the table name
             {
-                if(in.equalsIgnoreCase("courses") || in.equalsIgnoreCase("students") || in.equalsIgnoreCase("grades")) {
+                if(in.equalsIgnoreCase("courses") || in.equalsIgnoreCase("students") || in.equalsIgnoreCase("grades")) 
+                {
                     tableName = in;
-                    if(query.split(" ").length == 3) {
+                    if(query.split(" ").length == 3) 
+                    {
                     	DB.delete(tableName);
                     	ret = "Done.";
                     }
                 }
-                else {
+                else 
+                {
                 	parser.close();
                 	throw new IllegalArgumentException(in + " is not a valid table name");
                 }
             }
-            if(queryType == 2 && wordNumber == 4)
+            if(queryType == 2 && wordNumber == 4) // Handles the additional conditions for the WHERE clause
             {
-                if(in.equalsIgnoreCase("WHERE"))
+                if(in.equalsIgnoreCase("WHERE")) // Checks for WHERE text
                 {
                     // Handle where clause
-                    ArrayList<String> conditions = new ArrayList<String>();
-                    while(parser.hasNext())
+                    ArrayList<String> conditions = new ArrayList<>();
+                    while(parser.hasNext()) // Adds conditions to the list
                     {
                         conditions.add(parser.next());
                     }
@@ -308,128 +314,208 @@ public class SQLParser
                             conditionType = 1;
                         }
                     }
-                    ArrayList<Integer> removeList = new ArrayList<Integer>();
-                    if(conditionType == 0)
+                    
+                    ArrayList<Integer> removeList = new ArrayList<>(); // Creates a list of records to be removd
+                    if(conditionType == 0) // OR Query
                     {
-                        int i = 0;
-                        for(String s : conditions)
+                        for(String s : conditions) // Loop through Conditions
                         {
-                            String[] pieces = s.split("=|<>|>=|<=|<|>");
-                            ArrayList<Object> list = DB.getField(tableName, pieces[1]);
-
-                            try
+                            if(s.compareToIgnoreCase("OR") != 0) // Discard OR operators
                             {
-                                if(s.contains("=")) // =, <= or >=
-                                {
-                                    if(s.contains(">"))
-                                    {
-                                        if(Integer.parseInt(list.get(i).toString()) >= Integer.parseInt(pieces[2]))
-                                            removeList.add(i);
-                                    }
-                                    else if(s.contains("<"))
-                                    {
-                                        if(Integer.parseInt(list.get(i).toString()) <= Integer.parseInt(pieces[2]))
-                                            removeList.add(i);
-                                    }
-                                    else
-                                    {
-                                        if(list.get(i).toString() == pieces[2])
-                                            removeList.add(i);
-                                    }
-                                }
-                                else if(s.contains(">"))
-                                {
-                                    if(Integer.parseInt(list.get(i).toString()) > Integer.parseInt(pieces[2]))
-                                        removeList.add(i);
-                                }
-                                else if(s.contains("<"))
-                                {
-                                    if(Integer.parseInt(list.get(i).toString()) < Integer.parseInt(pieces[2]))
-                                        removeList.add(i);
-                                }
-                                else
-                                    throw new Exception("Invalid operator specified.");
-                            }
-                            catch(Exception e)
-                            {
-                            	parser.close();
-                                return "Binary comparisons (> and <) can only be done with integers";
-                            }
+                                String[] pieces = s.split("=|<>|>=|<=|<|>"); // Splits the condition up, excludes operator
+                                pieces[1] = pieces[1].replace("'", ""); // Removes " ' " 's from value
+                                ArrayList<Object> list = DB.getField(tableName, pieces[0]); // Gets a list of record values for the field being compared
 
-                            i++;
+                                for(int i = 0; i < list.size(); i++) // For each record,
+                                {
+                                    try
+                                    {
+                                        if(s.contains("=")) // Finds which operator was used, so that correct comparison may be made
+                                        {
+                                            if(s.contains(">"))
+                                            {
+                                                if(Integer.parseInt(list.get(i).toString()) >= Integer.parseInt(pieces[1]))
+                                                    removeList.add(i);
+                                            }
+                                            else if(s.contains("<"))
+                                            {
+                                                if(Integer.parseInt(list.get(i).toString()) <= Integer.parseInt(pieces[1]))
+                                                    removeList.add(i);
+                                            }
+                                            else
+                                            {
+                                                if(list.get(i).toString().compareTo(pieces[1]) == 0)
+                                                    removeList.add(i);
+                                            }
+                                        }
+                                        else if(s.contains("<>"))
+                                        {
+                                            if(list.get(i).toString().compareTo(pieces[1]) != 0)
+                                                    removeList.add(i);
+                                        }
+                                        else if(s.contains(">"))
+                                        {
+                                            if(Integer.parseInt(list.get(i).toString()) > Integer.parseInt(pieces[1]))
+                                                removeList.add(i);
+                                        }
+                                        else if(s.contains("<"))
+                                        {
+                                            if(Integer.parseInt(list.get(i).toString()) < Integer.parseInt(pieces[1]))
+                                                removeList.add(i);
+                                        }
+                                        else 
+                                        {
+                                            throw new Exception("Invalid operator specified.");
+                                        }
+                                    }
+                                    catch(Exception e)
+                                    {
+                                        return "Binary comparisons (> and <) can only be done with integers";
+                                    }
+                                }
+                            }
                         }
                     }
-                    else if(conditionType == -1) {
-                    }
-                    else
+                    else if(conditionType == -1) // Single criteria,  Everything else is the same
                     {
-                        int i = 0;
-                        ArrayList<Object> temp = DB.getField(tableName, conditions.get(0).split("=|<>|>=|<=|<|>")[1]);
+                        String[] pieces = conditions.get(0).split("=|<>|>=|<=|<|>");
+                        pieces[1] = pieces[1].replace("'", "");
+                        ArrayList<Object> list = DB.getField(tableName, pieces[0]);
+                        
+                        for(int i = 0; i < list.size(); i++)
+                        {
+                            try
+                                {
+                                    if(conditions.get(0).contains("=")) // =, <= or >=
+                                    {
+                                        if(conditions.get(0).contains(">"))
+                                        {
+                                            if(Integer.parseInt(list.get(i).toString()) >= Integer.parseInt(pieces[1]))
+                                                removeList.add(i);
+                                        }
+                                        else if(conditions.get(0).contains("<"))
+                                        {
+                                            if(Integer.parseInt(list.get(i).toString()) <= Integer.parseInt(pieces[1]))
+                                                removeList.add(i);
+                                        }
+                                        else
+                                        {
+                                            if(list.get(i).toString().compareTo(pieces[1]) == 0)
+                                                removeList.add(i);
+                                        }
+                                    }
+                                    else if(conditions.get(0).contains("<>"))
+                                    {
+                                        if(list.get(i).toString().compareTo(pieces[1]) != 0)
+                                                removeList.add(i);
+                                    }
+                                    else if(conditions.get(0).contains(">"))
+                                    {
+                                        if(Integer.parseInt(list.get(i).toString()) > Integer.parseInt(pieces[1]))
+                                            removeList.add(i);
+                                    }
+                                    else if(conditions.get(0).contains("<"))
+                                    {
+                                        if(Integer.parseInt(list.get(i).toString()) < Integer.parseInt(pieces[1]))
+                                            removeList.add(i);
+                                    }
+                                    else 
+                                    {
+                                        throw new Exception("Invalid operator specified.");
+                                    }
+                                }
+                                catch(Exception e)
+                                {
+                                    return "Binary comparisons (> and <) can only be done with integers";
+                                }
+                        }
+                    }
+                    else // AND operators, everything is the same, but condition checks are NEGATED
+                    {
+                        ArrayList<Object> temp = DB.getField(tableName, conditions.get(0).split("=|<>|>=|<=|<|>")[0]);
                         int max = temp.size();
                         int[] negate = new int[max];
                         for(String s : conditions)
                         {
-                            String[] pieces = s.split("=|<>|>=|<=|<|>");
-                            ArrayList<Object> list = DB.getField(tableName, pieces[1]);
-
-                            try
+                            if(s.compareToIgnoreCase("AND") != 0)
                             {
-                                if(s.contains("=")) // =, <= or >=
+                                String[] pieces = s.split("=|<>|>=|<=|<|>");
+                                pieces[1] = pieces[1].replace("'", "");
+                                ArrayList<Object> list = DB.getField(tableName, pieces[0]);
+                                for(int i = 0; i < list.size(); i++)
                                 {
-                                    if(s.contains(">"))
+                                    try
                                     {
-                                        if(Integer.parseInt(list.get(i).toString()) >= Integer.parseInt(pieces[2]))
-                                            negate[i] = 1;
+                                        if(s.contains("=")) // =, <= or >=
+                                        {
+                                            if(s.contains(">"))
+                                            {
+                                                if(Integer.parseInt(list.get(i).toString()) <= Integer.parseInt(pieces[1]))
+                                                    negate[i] = 1;
+                                            }
+                                            else if(s.contains("<"))
+                                            {
+                                                if(Integer.parseInt(list.get(i).toString()) >= Integer.parseInt(pieces[1]))
+                                                    negate[i] = 1;
+                                            }
+                                            else
+                                            {
+                                                if(list.get(i).toString().compareTo(pieces[1]) != 0)
+                                                    negate[i] = 1;
+                                            }
+                                        }
+                                        else if(s.contains("<>"))
+                                        {
+                                            if(list.get(i).toString().compareTo(pieces[1]) == 0)
+                                                    removeList.add(i);
+                                        }
+                                        else if(s.contains(">"))
+                                        {
+                                            if(Integer.parseInt(list.get(i).toString()) > Integer.parseInt(pieces[1]))
+                                                negate[i] = 1;
+                                        }
+                                        else if(s.contains("<"))
+                                        {
+                                            if(Integer.parseInt(list.get(i).toString()) < Integer.parseInt(pieces[1]))
+                                                negate[i] = 1;
+                                        }
+                                        else 
+                                        {
+                                            throw new Exception("Invalid operator specified.");
+                                        }
                                     }
-                                    else if(s.contains("<"))
+                                    catch(Exception e)
                                     {
-                                        if(Integer.parseInt(list.get(i).toString()) <= Integer.parseInt(pieces[2]))
-                                            negate[i] = 1;
-                                    }
-                                    else
-                                    {
-                                        if(list.get(i).toString() == pieces[2])
-                                            negate[i] = 1;
+                                        return "Binary comparisons (> and <) can only be done with integers";
                                     }
                                 }
-                                else if(s.contains(">"))
-                                {
-                                    if(Integer.parseInt(list.get(i).toString()) > Integer.parseInt(pieces[2]))
-                                        negate[i] = 1;
-                                }
-                                else if(s.contains("<"))
-                                {
-                                    if(Integer.parseInt(list.get(i).toString()) < Integer.parseInt(pieces[2]))
-                                        negate[i] = 1;
-                                }
-                                else
-                                    throw new Exception("Invalid operator specified.");
                             }
-                            catch(Exception e)
-                            {
-                                return "Binary comparisons (> and <) can only be done with integers";
-                            }
-
-                            i++;
                         }
-                        for(int x = 0; x < max; x++)
+                        for(int x = 0; x < max; x++) // Reverses negation, to be able to add ACTUAL items that survived the conditions to the list.
                         {
                             if(negate[x] != 1)
                                 removeList.add(x);
                         }
                     }
 
-                    for(Integer i : removeList)
+                    Collections.sort(removeList,  // sorts the removal list in REVERSE ORDER, so that the indexes are not ruined by removing entires earlier in the list, thus shifting all elements after it.
+                            new Comparator<Integer>() 
+                            {
+                                @Override
+                                public int compare(Integer o1, Integer o2) 
+                                {
+                                    return o2.compareTo(o1);
+                                }
+                            }       );
+                    for(Integer i : removeList) // Deletes the appropriate entries.
                     {
                         DB.delete(tableName, i.intValue());
                     }
-                    parser.close();
                     ret = "Done.";
                 }
                 else
                 {
                     DB.delete(tableName); // Delete all records in table
-                    parser.close();
                     ret = "Done.";
                 }
             }
