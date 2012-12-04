@@ -1,8 +1,6 @@
 import java.util.Scanner;
 import database.Database;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 
 public class SQLParser
 {
@@ -18,11 +16,16 @@ public class SQLParser
         Database testDB = new Database();
         SQLParser Parser = new SQLParser(testDB);
         System.out.println(Parser.query("INSERT INTO courses VALUES (COP3504, Advanced Programming Fundamentals, Horton)"));
+        System.out.println(Parser.query("INSERT INTO students VALUES (1, Bjorn, Stange, 22, 4)"));
+        System.out.println(Parser.query("INSERT INTO grades VALUES (1, COP3504, 3.0, true)"));
         System.out.println(Parser.query("INSERT INTO courses (course, name, instructor) VALUES (COP3505, Advanced Programming Fundamentals2, Hortona)"));
-        //System.out.println(Parser.query("SELECT * FROM courses"));
-        //System.out.println(Parser.query("SELECT course FROM courses"));
-        //System.out.println(Parser.query("SELECT course, name FROM courses"));
-        System.out.println(Parser.query("DELETE FROM courses WHERE course='COP3505' AND instructor='Hortona'"));
+        System.out.println(Parser.query("SELECT * FROM courses"));
+        System.out.println(Parser.query("SELECT * FROM grades"));
+        System.out.println(Parser.query("SELECT * FROM students"));
+        System.out.println(Parser.query("SELECT course FROM courses"));
+        System.out.println(Parser.query("SELECT course, name FROM courses"));
+        System.out.println(Parser.query("SELECT * FROM courses"));
+        System.out.println(Parser.query("SELECT course, name, instructor FROM courses JOIN grades ON courses.course = grades.course"));
         System.out.println(Parser.query("SELECT * FROM courses"));
     }
 
@@ -38,16 +41,16 @@ public class SQLParser
         // this holds the name of the table, can be either courses, students, or grades
         String tableName = "";
         // ArrayList of Strings to hold the list of values provided in the query
-        ArrayList<String> valueList = new ArrayList<>();
+        ArrayList<String> valueList = new ArrayList<String>();
         // ArrayList of Strings to hold the list of columns provided in the query
-        ArrayList<String> columnList = new ArrayList<>();
+        ArrayList<String> columnList = new ArrayList<String>();
         // ArrayList of Strings that holds the list of all fields for the courses table, then students, then grades
         ArrayList<String> coursesFieldList = DB.getFieldList("courses");
         ArrayList<String> studentsFieldList = DB.getFieldList("students");
         ArrayList<String> gradesFieldList = DB.getFieldList("grades");
         Scanner parser = new Scanner(query);
         String ret = "";
-        String in;
+        String in = "";
         while(parser.hasNext()) {
             in = parser.next();
             ++wordNumber;
@@ -76,6 +79,7 @@ public class SQLParser
                 }
             }
 
+            // Handles INSERT statement
             if(queryType == 0 && wordNumber == 4) {
                 if(in.equalsIgnoreCase("VALUES")) {
                     String values = "";
@@ -124,8 +128,10 @@ public class SQLParser
                     ret = "Done.";
                 }
             }
+
+            // Handles SELECT statement
             if(queryType == 1 && wordNumber == 2) {
-                ArrayList<ArrayList<Object>> returnArr = new ArrayList<>();
+                ArrayList<ArrayList<Object>> returnArr = new ArrayList<ArrayList<Object>>();
                 if(in.equals("*")) {
                     ++wordNumber;
                     ++wordNumber;
@@ -154,10 +160,10 @@ public class SQLParser
                     }
                 }
                 else {
-                	ArrayList<String> inputTables = new ArrayList<>();
-                	ArrayList<String> inputFields = new ArrayList<>();
-                	ArrayList<ArrayList<Object>> joinedList = new ArrayList<>(); // this list is for holding the final joined list as a result of a JOIN command
-                	ArrayList<String> joinFields = new ArrayList<>();
+                	ArrayList<String> inputTables = new ArrayList<String>();
+                	ArrayList<String> inputFields = new ArrayList<String>();
+                	ArrayList<ArrayList<Object>> joinedList = new ArrayList<ArrayList<Object>>(); // this list is for holding the final joined list as a result of a JOIN command
+                	ArrayList<String> joinFields = new ArrayList<String>();
                 	boolean JWO = false; // does this statement include a JOIN, WHERE, or ORDER clause
                 	if(in.contains(",")) {
                         String inField = "";
@@ -176,6 +182,7 @@ public class SQLParser
                         while(parser.hasNext()) {
                         	in = parser.next();
                         	if(in.equalsIgnoreCase("JOIN")) {
+                        		JWO = true;
                         		in = parser.next();
                                 inputTables.add(in);
                         		in = parser.next();
@@ -183,32 +190,76 @@ public class SQLParser
                         		if(in.contains(inputTables.get(0))) {
                         			joinFields.add(0, in.split("\\.")[1]);
                         		}
-                        		else if(in.contains(inputTables.get(1))) { 
+                        		else if(in.contains(inputTables.get(1))) {
                         			joinFields.add(1, in.split("\\.")[1]);
                         		}
                         		else {
                         			throw new IllegalArgumentException("Syntax Error, make sure your join statement is correctly formed");
                         		}
                         		in = parser.next();
+                        		in = parser.next();
                         		if(in.contains(inputTables.get(0))) {
                         			joinFields.add(0, in.split("\\.")[1]);
                         		}
-                        		else if(in.contains(inputTables.get(1))) { 
+                        		else if(in.contains(inputTables.get(1))) {
                         			joinFields.add(1, in.split("\\.")[1]);
                         		}
                         		else {
                         			throw new IllegalArgumentException("Syntax Error, make sure your join statement is correctly formed");
                         		}
                         		// TODO finish up creating joined list
+
+                    			int index = 0;
+                        		for (String table : inputTables) {
+                        			joinedList.add(DB.getField(table, joinFields.get(index++)));
+                        		}
+                            	int[][] indexList = new int[2][joinedList.get(1).size() + joinedList.get(0).size()];
+                        		for (int j = 0; j < joinedList.size(); j++) {
+                        			for (int i = 0; i < joinedList.get(0).size(); i++) {
+                        				for (int k = 0; k < joinedList.get(1).size(); k++) {
+                        					if (joinedList.get(0).get(i).toString().equals(joinedList.get(1).get(k).toString())) {
+                        						 indexList[0][i] = 1;
+                        						 indexList[1][k] = 1;
+                        					}
+                        				}
+                        			}
+                        		}
+
+                                if (inputTables.get(0).equalsIgnoreCase("courses")) {
+                                    for (int j = 0; j < coursesFieldList.size(); j++) {
+                                        returnArr.add(DB.getField(inputTables.get(0), coursesFieldList.get(j)));
+                                    }
+                                }
+                                if (inputTables.get(0).equalsIgnoreCase("students")) {
+                                    for (int j = 0; j < studentsFieldList.size(); j++) {
+                                        returnArr.add(DB.getField(inputTables.get(0), studentsFieldList.get(j)));
+                                    }
+                                }
+                                if (inputTables.get(0).equalsIgnoreCase("grades")) {
+                                    for (int j = 0; j < gradesFieldList.size(); j++) {
+                                        returnArr.add(DB.getField(inputTables.get(0), gradesFieldList.get(j)));
+                                    }
+                                }
+                        		for (int k = 0; k < 2; k++) {
+                        			for (int i = 0; i < returnArr.size(); i++) {
+                        				for (int j = 0; j < returnArr.get(i).size(); j++) {
+                        					if (indexList[k][j] != 1) {
+                        						returnArr.get(i).remove(j);
+                        					}
+                        				}
+                        			}
+                        		}
                         	}
                         	if(in.equalsIgnoreCase("WHERE")) {
+                        		JWO = true;
                         		// TODO Handle WHERE
                         	}
                         	if(in.equalsIgnoreCase("ORDER")) {
+                        		JWO = true;
                         		// TODO Handle ORDER
                         	}
                         }
-                        
+
                         if(!JWO) {
                         	for (String field : inputFields) {
                         		returnArr.add(DB.getField(inputTables.get(0), field));
@@ -216,9 +267,10 @@ public class SQLParser
                         	ret = outputFormatter(returnArr, inputFields);
                         }
                         else {
-                        	// TODO Handle cases where there is JOIN, WHERE, ORDER
+
+                    		ret = outputFormatter(returnArr, inputFields);
                         }
-                        
+
                 	}
                     else {
                         inputFields.add(in);
@@ -228,6 +280,7 @@ public class SQLParser
                         while(parser.hasNext()) {
                         	in = parser.next();
                         	if(in.equalsIgnoreCase("JOIN")) {
+                        		JWO = true;
                         		in = parser.next();
                                 inputTables.add(in);
                         		in = parser.next();
@@ -235,32 +288,78 @@ public class SQLParser
                         		if(in.contains(inputTables.get(0))) {
                         			joinFields.add(0, in.split("\\.")[1]);
                         		}
-                        		else if(in.contains(inputTables.get(1))) { 
+                        		else if(in.contains(inputTables.get(1))) {
                         			joinFields.add(1, in.split("\\.")[1]);
                         		}
                         		else {
                         			throw new IllegalArgumentException("Syntax Error, make sure your join statement is correctly formed");
                         		}
+                        		in = parser.next(); // it's on the = here
                         		in = parser.next();
                         		if(in.contains(inputTables.get(0))) {
                         			joinFields.add(0, in.split("\\.")[1]);
                         		}
-                        		else if(in.contains(inputTables.get(1))) { 
+                        		else if(in.contains(inputTables.get(1))) {
                         			joinFields.add(1, in.split("\\.")[1]);
                         		}
                         		else {
                         			throw new IllegalArgumentException("Syntax Error, make sure your join statement is correctly formed");
                         		}
                         		// TODO finish up creating joined list
+
+                        		int index = 0;
+                        		for (String table : inputTables) {
+                        			joinedList.add(DB.getField(table, joinFields.get(index++)));
+                        		}
+                            	int[][] indexList = new int[2][joinedList.get(1).size() + joinedList.get(0).size()];
+                        		for (int j = 0; j < joinedList.size(); j++) {
+                        			for (int i = 0; i < joinedList.get(0).size(); i++) {
+                        				for (int k = 0; k < joinedList.get(1).size(); k++) {
+                        					if (joinedList.get(0).get(i).toString().equals(joinedList.get(1).get(k).toString())) {
+                        						 indexList[0][i] = 1;
+                        						 indexList[1][k] = 1;
+                        					}
+                        				}
+                        			}
+                        		}
+
+                                if (inputTables.get(0).equalsIgnoreCase("courses")) {
+                                    for (int j = 0; j < coursesFieldList.size(); j++) {
+                                        returnArr.add(DB.getField(inputTables.get(0), coursesFieldList.get(j)));
+                                    }
+                                }
+                                if (inputTables.get(0).equalsIgnoreCase("students")) {
+                                    for (int j = 0; j < studentsFieldList.size(); j++) {
+                                        returnArr.add(DB.getField(inputTables.get(0), studentsFieldList.get(j)));
+                                    }
+                                }
+                                if (inputTables.get(0).equalsIgnoreCase("grades")) {
+                                    for (int j = 0; j < gradesFieldList.size(); j++) {
+                                        returnArr.add(DB.getField(inputTables.get(0), gradesFieldList.get(j)));
+                                    }
+                                }
+
+                        		for (int k = 0; k < 2; k++) {
+                        			for (int i = 0; i < returnArr.size(); i++) {
+                        				for (int j = 0; j < returnArr.get(i).size(); j++) {
+                        					if (indexList[k][j] != 1) {
+                        						returnArr.get(i).remove(j);
+                        					}
+                        				}
+                        			}
+                        		}
+
                         	}
                         	if(in.equalsIgnoreCase("WHERE")) {
+                        		JWO = true;
                         		// TODO Handle WHERE
                         	}
                         	if(in.equalsIgnoreCase("ORDER")) {
+                        		JWO = true;
                         		// TODO Handle ORDER
                         	}
                         }
-                        
+
                         if(!JWO) {
                         	for (String field : inputFields) {
                         		returnArr.add(DB.getField(inputTables.get(0), field));
@@ -268,37 +367,36 @@ public class SQLParser
                         	ret = outputFormatter(returnArr, inputFields);
                         }
                         else {
-                        	// TODO Handle cases where there is JOIN, WHERE, ORDER
+
+                    		ret = outputFormatter(returnArr, inputFields);
                         }
-                        
+
                     }
                 }
             }
-            /// START DELETE BLOCK ///
-            if(queryType == 2 && wordNumber == 3) // Sets the table name
+
+            // Handles DELETE statement
+            if(queryType == 2 && wordNumber == 3)
             {
-                if(in.equalsIgnoreCase("courses") || in.equalsIgnoreCase("students") || in.equalsIgnoreCase("grades")) 
-                {
+                if(in.equalsIgnoreCase("courses") || in.equalsIgnoreCase("students") || in.equalsIgnoreCase("grades")) {
                     tableName = in;
-                    if(query.split(" ").length == 3) 
-                    {
+                    if(query.split(" ").length == 3) {
                     	DB.delete(tableName);
                     	ret = "Done.";
                     }
                 }
-                else 
-                {
+                else {
                 	parser.close();
                 	throw new IllegalArgumentException(in + " is not a valid table name");
                 }
             }
-            if(queryType == 2 && wordNumber == 4) // Handles the additional conditions for the WHERE clause
+            if(queryType == 2 && wordNumber == 4)
             {
-                if(in.equalsIgnoreCase("WHERE")) // Checks for WHERE text
+                if(in.equalsIgnoreCase("WHERE"))
                 {
                     // Handle where clause
-                    ArrayList<String> conditions = new ArrayList<>();
-                    while(parser.hasNext()) // Adds conditions to the list
+                    ArrayList<String> conditions = new ArrayList<String>();
+                    while(parser.hasNext())
                     {
                         conditions.add(parser.next());
                     }
@@ -314,208 +412,128 @@ public class SQLParser
                             conditionType = 1;
                         }
                     }
-                    
-                    ArrayList<Integer> removeList = new ArrayList<>(); // Creates a list of records to be removd
-                    if(conditionType == 0) // OR Query
+                    ArrayList<Integer> removeList = new ArrayList<Integer>();
+                    if(conditionType == 0)
                     {
-                        for(String s : conditions) // Loop through Conditions
+                        int i = 0;
+                        for(String s : conditions)
                         {
-                            if(s.compareToIgnoreCase("OR") != 0) // Discard OR operators
-                            {
-                                String[] pieces = s.split("=|<>|>=|<=|<|>"); // Splits the condition up, excludes operator
-                                pieces[1] = pieces[1].replace("'", ""); // Removes " ' " 's from value
-                                ArrayList<Object> list = DB.getField(tableName, pieces[0]); // Gets a list of record values for the field being compared
+                            String[] pieces = s.split("=|<>|>=|<=|<|>");
+                            ArrayList<Object> list = DB.getField(tableName, pieces[1]);
 
-                                for(int i = 0; i < list.size(); i++) // For each record,
-                                {
-                                    try
-                                    {
-                                        if(s.contains("=")) // Finds which operator was used, so that correct comparison may be made
-                                        {
-                                            if(s.contains(">"))
-                                            {
-                                                if(Integer.parseInt(list.get(i).toString()) >= Integer.parseInt(pieces[1]))
-                                                    removeList.add(i);
-                                            }
-                                            else if(s.contains("<"))
-                                            {
-                                                if(Integer.parseInt(list.get(i).toString()) <= Integer.parseInt(pieces[1]))
-                                                    removeList.add(i);
-                                            }
-                                            else
-                                            {
-                                                if(list.get(i).toString().compareTo(pieces[1]) == 0)
-                                                    removeList.add(i);
-                                            }
-                                        }
-                                        else if(s.contains("<>"))
-                                        {
-                                            if(list.get(i).toString().compareTo(pieces[1]) != 0)
-                                                    removeList.add(i);
-                                        }
-                                        else if(s.contains(">"))
-                                        {
-                                            if(Integer.parseInt(list.get(i).toString()) > Integer.parseInt(pieces[1]))
-                                                removeList.add(i);
-                                        }
-                                        else if(s.contains("<"))
-                                        {
-                                            if(Integer.parseInt(list.get(i).toString()) < Integer.parseInt(pieces[1]))
-                                                removeList.add(i);
-                                        }
-                                        else 
-                                        {
-                                            throw new Exception("Invalid operator specified.");
-                                        }
-                                    }
-                                    catch(Exception e)
-                                    {
-                                        return "Binary comparisons (> and <) can only be done with integers";
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else if(conditionType == -1) // Single criteria,  Everything else is the same
-                    {
-                        String[] pieces = conditions.get(0).split("=|<>|>=|<=|<|>");
-                        pieces[1] = pieces[1].replace("'", "");
-                        ArrayList<Object> list = DB.getField(tableName, pieces[0]);
-                        
-                        for(int i = 0; i < list.size(); i++)
-                        {
                             try
+                            {
+                                if(s.contains("=")) // =, <= or >=
                                 {
-                                    if(conditions.get(0).contains("=")) // =, <= or >=
+                                    if(s.contains(">"))
                                     {
-                                        if(conditions.get(0).contains(">"))
-                                        {
-                                            if(Integer.parseInt(list.get(i).toString()) >= Integer.parseInt(pieces[1]))
-                                                removeList.add(i);
-                                        }
-                                        else if(conditions.get(0).contains("<"))
-                                        {
-                                            if(Integer.parseInt(list.get(i).toString()) <= Integer.parseInt(pieces[1]))
-                                                removeList.add(i);
-                                        }
-                                        else
-                                        {
-                                            if(list.get(i).toString().compareTo(pieces[1]) == 0)
-                                                removeList.add(i);
-                                        }
-                                    }
-                                    else if(conditions.get(0).contains("<>"))
-                                    {
-                                        if(list.get(i).toString().compareTo(pieces[1]) != 0)
-                                                removeList.add(i);
-                                    }
-                                    else if(conditions.get(0).contains(">"))
-                                    {
-                                        if(Integer.parseInt(list.get(i).toString()) > Integer.parseInt(pieces[1]))
+                                        if(Integer.parseInt(list.get(i).toString()) >= Integer.parseInt(pieces[2]))
                                             removeList.add(i);
                                     }
-                                    else if(conditions.get(0).contains("<"))
+                                    else if(s.contains("<"))
                                     {
-                                        if(Integer.parseInt(list.get(i).toString()) < Integer.parseInt(pieces[1]))
+                                        if(Integer.parseInt(list.get(i).toString()) <= Integer.parseInt(pieces[2]))
                                             removeList.add(i);
                                     }
-                                    else 
+                                    else
                                     {
-                                        throw new Exception("Invalid operator specified.");
+                                        if(list.get(i).toString() == pieces[2])
+                                            removeList.add(i);
                                     }
                                 }
-                                catch(Exception e)
+                                else if(s.contains(">"))
                                 {
-                                    return "Binary comparisons (> and <) can only be done with integers";
+                                    if(Integer.parseInt(list.get(i).toString()) > Integer.parseInt(pieces[2]))
+                                        removeList.add(i);
                                 }
+                                else if(s.contains("<"))
+                                {
+                                    if(Integer.parseInt(list.get(i).toString()) < Integer.parseInt(pieces[2]))
+                                        removeList.add(i);
+                                }
+                                else
+                                    throw new Exception("Invalid operator specified.");
+                            }
+                            catch(Exception e)
+                            {
+                            	parser.close();
+                                return "Binary comparisons (> and <) can only be done with integers";
+                            }
+
+                            i++;
                         }
                     }
-                    else // AND operators, everything is the same, but condition checks are NEGATED
+                    else if(conditionType == -1) {
+                    }
+                    else
                     {
-                        ArrayList<Object> temp = DB.getField(tableName, conditions.get(0).split("=|<>|>=|<=|<|>")[0]);
+                        int i = 0;
+                        ArrayList<Object> temp = DB.getField(tableName, conditions.get(0).split("=|<>|>=|<=|<|>")[1]);
                         int max = temp.size();
                         int[] negate = new int[max];
                         for(String s : conditions)
                         {
-                            if(s.compareToIgnoreCase("AND") != 0)
+                            String[] pieces = s.split("=|<>|>=|<=|<|>");
+                            ArrayList<Object> list = DB.getField(tableName, pieces[1]);
+
+                            try
                             {
-                                String[] pieces = s.split("=|<>|>=|<=|<|>");
-                                pieces[1] = pieces[1].replace("'", "");
-                                ArrayList<Object> list = DB.getField(tableName, pieces[0]);
-                                for(int i = 0; i < list.size(); i++)
+                                if(s.contains("=")) // =, <= or >=
                                 {
-                                    try
+                                    if(s.contains(">"))
                                     {
-                                        if(s.contains("=")) // =, <= or >=
-                                        {
-                                            if(s.contains(">"))
-                                            {
-                                                if(Integer.parseInt(list.get(i).toString()) <= Integer.parseInt(pieces[1]))
-                                                    negate[i] = 1;
-                                            }
-                                            else if(s.contains("<"))
-                                            {
-                                                if(Integer.parseInt(list.get(i).toString()) >= Integer.parseInt(pieces[1]))
-                                                    negate[i] = 1;
-                                            }
-                                            else
-                                            {
-                                                if(list.get(i).toString().compareTo(pieces[1]) != 0)
-                                                    negate[i] = 1;
-                                            }
-                                        }
-                                        else if(s.contains("<>"))
-                                        {
-                                            if(list.get(i).toString().compareTo(pieces[1]) == 0)
-                                                    removeList.add(i);
-                                        }
-                                        else if(s.contains(">"))
-                                        {
-                                            if(Integer.parseInt(list.get(i).toString()) > Integer.parseInt(pieces[1]))
-                                                negate[i] = 1;
-                                        }
-                                        else if(s.contains("<"))
-                                        {
-                                            if(Integer.parseInt(list.get(i).toString()) < Integer.parseInt(pieces[1]))
-                                                negate[i] = 1;
-                                        }
-                                        else 
-                                        {
-                                            throw new Exception("Invalid operator specified.");
-                                        }
+                                        if(Integer.parseInt(list.get(i).toString()) >= Integer.parseInt(pieces[2]))
+                                            negate[i] = 1;
                                     }
-                                    catch(Exception e)
+                                    else if(s.contains("<"))
                                     {
-                                        return "Binary comparisons (> and <) can only be done with integers";
+                                        if(Integer.parseInt(list.get(i).toString()) <= Integer.parseInt(pieces[2]))
+                                            negate[i] = 1;
+                                    }
+                                    else
+                                    {
+                                        if(list.get(i).toString() == pieces[2])
+                                            negate[i] = 1;
                                     }
                                 }
+                                else if(s.contains(">"))
+                                {
+                                    if(Integer.parseInt(list.get(i).toString()) > Integer.parseInt(pieces[2]))
+                                        negate[i] = 1;
+                                }
+                                else if(s.contains("<"))
+                                {
+                                    if(Integer.parseInt(list.get(i).toString()) < Integer.parseInt(pieces[2]))
+                                        negate[i] = 1;
+                                }
+                                else
+                                    throw new Exception("Invalid operator specified.");
                             }
+                            catch(Exception e)
+                            {
+                                return "Binary comparisons (> and <) can only be done with integers";
+                            }
+
+                            i++;
                         }
-                        for(int x = 0; x < max; x++) // Reverses negation, to be able to add ACTUAL items that survived the conditions to the list.
+                        for(int x = 0; x < max; x++)
                         {
                             if(negate[x] != 1)
                                 removeList.add(x);
                         }
                     }
 
-                    Collections.sort(removeList,  // sorts the removal list in REVERSE ORDER, so that the indexes are not ruined by removing entires earlier in the list, thus shifting all elements after it.
-                            new Comparator<Integer>() 
-                            {
-                                @Override
-                                public int compare(Integer o1, Integer o2) 
-                                {
-                                    return o2.compareTo(o1);
-                                }
-                            }       );
-                    for(Integer i : removeList) // Deletes the appropriate entries.
+                    for(Integer i : removeList)
                     {
                         DB.delete(tableName, i.intValue());
                     }
+                    parser.close();
                     ret = "Done.";
                 }
                 else
                 {
                     DB.delete(tableName); // Delete all records in table
+                    parser.close();
                     ret = "Done.";
                 }
             }
