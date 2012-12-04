@@ -469,7 +469,7 @@ public class CommandLineInterface
 			return;
 		try
 		{
-			String query = String.format("SELECT * FROM courses WHERE course=%s", courseCode);
+			String query = String.format("SELECT * FROM courses WHERE course='%s'", courseCode);
 			out.println(parser.query(query));
 		}catch (Exception e)
 		{
@@ -490,7 +490,7 @@ public class CommandLineInterface
 			return;
 		try
 		{
-			String query = String.format("UPDATE grades SET grade=%s WHERE course=%s AND student=%s",
+			String query = String.format("UPDATE grades SET grade='%s' WHERE course='%s' AND student='%s'",
 					grade, courseCode, studentID);
 			out.println(parser.query(query));
 		}catch (Exception e)
@@ -547,7 +547,7 @@ public class CommandLineInterface
 			return;
 		try
 		{
-			String query = String.format("SELECT * FROM grades WHERE student=%s", studentID);
+			String query = String.format("SELECT * FROM grades WHERE student='%s'", studentID);
 			out.println(parser.query(query));
 		}catch (Exception e)
 		{
@@ -562,7 +562,7 @@ public class CommandLineInterface
 			return;
 		try
 		{
-			String query = String.format("SELECT * FROM grades WHERE course=%s", courseName);
+			String query = String.format("SELECT * FROM grades WHERE course='%s'", courseName);
 			out.println(parser.query(query));
 		}catch (Exception e)
 		{
@@ -580,7 +580,7 @@ public class CommandLineInterface
 			return;
 		try
 		{
-			String query = String.format("DELETE FROM grades WHERE course=%s AND student=%s", courseCode, studentID);
+			String query = String.format("DELETE FROM grades WHERE course='%s' AND student='%s'", courseCode, studentID);
 			out.println(parser.query(query));
 		}catch (Exception e)
 		{
