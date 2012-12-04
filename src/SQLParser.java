@@ -190,6 +190,7 @@ public class SQLParser
                         		else {
                         			throw new IllegalArgumentException("Syntax Error, make sure your join statement is correctly formed");
                         		}
+								in = parser.next(); // it's on the = here
                         		in = parser.next();
                         		if(in.contains(inputTables.get(0))) {
                         			joinFields.add(0, in.split("\\.")[1]);
